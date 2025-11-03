@@ -4,6 +4,7 @@ use std::time::Instant;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use tokio::sync::mpsc;
+use tokio::runtime::Handle;
 use image_compressor::{Factor, FolderCompressor, compressor::Compressor};
 use walkdir::WalkDir;
 use rayon::prelude::*;
@@ -36,6 +37,9 @@ pub async fn compress_images(
 
     // Create compression factor
     let factor = Factor::new(config.quality, config.size_ratio);
+
+    // Capture Tokio runtime handle for sending progress from Rayon threads
+    let runtime_handle = Handle::current();
 
     // Configure Rayon thread pool size
     let thread_count = config.thread_count;
@@ -130,8 +134,7 @@ pub async fn compress_images(
                 // Update progress counter and send progress update
                 let current = processed.fetch_add(1, Ordering::Relaxed) + 1;
 
-                // Send progress update (throttle to avoid flooding the channel)
-                // In parallel mode, send every update for accuracy
+                // Send progress update from Rayon thread to Tokio channel
                 let filename = file_path
                     .file_name()
                     .and_then(|n| n.to_str())
@@ -144,9 +147,11 @@ pub async fn compress_images(
                     filename,
                 );
 
-                // Send progress update using blocking_send
-                // With larger channel buffer (1000), this should not block in practice
-                let _ = progress_tx.blocking_send(progress_update);
+                // Clone the sender and spawn send operation on Tokio runtime
+                let tx_clone = progress_tx.clone();
+                runtime_handle.spawn(async move {
+                    let _ = tx_clone.send(progress_update).await;
+                });
             });
 
             // Extract final result
