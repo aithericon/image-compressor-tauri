@@ -1,5 +1,4 @@
-use tauri::{Manager, Emitter};
-use tokio::sync::mpsc;
+use tauri::Emitter;
 
 use crate::compression::{
     CompressionConfig,
@@ -43,16 +42,14 @@ pub async fn analyze_images(
     // Run analysis in a blocking task with progress reporting
     let result = tokio::task::spawn_blocking(move || {
         analyze_images_internal(&paths, quality, size_ratio, generate_thumbnails, |current, total| {
-            // Emit progress event (throttle updates to avoid flooding)
-            if current % 5 == 0 || current == total {
-                let percent = (current as f32 / total as f32 * 100.0) as u32;
-                let progress = AnalysisProgress {
-                    current,
-                    total,
-                    percent,
-                };
-                let _ = app_handle.emit("analysis:progress", &progress);
-            }
+            // Emit progress event for every image
+            let percent = (current as f32 / total as f32 * 100.0) as u32;
+            let progress = AnalysisProgress {
+                current,
+                total,
+                percent,
+            };
+            let _ = app_handle.emit("analysis:progress", &progress);
         })
     })
     .await
@@ -84,34 +81,20 @@ pub async fn compress_images(
     // Validate configuration
     config.validate()?;
 
-    // Create progress channel with larger buffer for parallel compression
-    // Buffer size should accommodate parallel threads sending updates
-    let (tx, mut rx) = mpsc::channel::<ProgressUpdate>(1000);
-
-    // Clone app handle for the progress task
+    // Clone app handle for use in closure
     let app_handle = app.clone();
 
-    // Spawn task to forward progress updates as Tauri events
-    let progress_task = tokio::spawn(async move {
-        while let Some(progress) = rx.recv().await {
-            // Emit progress event to frontend
-            let _ = app_handle.emit("compression:progress", &progress);
-
-            log::debug!(
-                "Progress: {}/{} ({}%) - {}",
-                progress.current,
-                progress.total,
-                progress.percent,
-                progress.current_file
-            );
-        }
-    });
-
-    // Run compression
-    let result = compress_images_internal(config, tx).await;
-
-    // Wait for progress task to complete
-    let _ = progress_task.await;
+    // Run compression in a blocking task with progress reporting (like analysis)
+    let result = tokio::task::spawn_blocking(move || {
+        compress_images_internal(config, |progress| {
+            // Emit progress event directly for every file
+            if let Err(e) = app_handle.emit("compression:progress", &progress) {
+                log::error!("Failed to emit progress event: {}", e);
+            }
+        })
+    })
+    .await
+    .map_err(|e| format!("Compression task failed: {}", e))?;
 
     // Emit completion event
     match &result {

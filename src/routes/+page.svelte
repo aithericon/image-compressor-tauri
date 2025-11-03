@@ -4,7 +4,6 @@
 	import ImageList from '$lib/components/ImageList.svelte';
 	import CompressionSettings from '$lib/components/CompressionSettings.svelte';
 	import CompressButton from '$lib/components/CompressButton.svelte';
-	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import ResultsSummary from '$lib/components/ResultsSummary.svelte';
 	import ActionButtons from '$lib/components/ActionButtons.svelte';
 	import { compressionState } from '$lib/stores/compression-state.svelte';
@@ -32,11 +31,13 @@
 		const setupListeners = async () => {
 			// Listen to compression progress events
 			unlistenProgress = await listen<ProgressUpdate>('compression:progress', (event) => {
+				console.log('[Frontend] Progress event received:', event.payload);
 				compressionState.progress = event.payload;
 			});
 
 			// Listen to compression complete events
 			unlistenComplete = await listen<CompressResult>('compression:complete', (event) => {
+				console.log('[Frontend] Compression complete event received:', event.payload);
 				compressionState.result = event.payload;
 				compressionState.isCompressing = false;
 				compressionState.showResults = true;
@@ -88,16 +89,9 @@
 				<CompressionSettings />
 			{/if}
 
-			<!-- Compress Button -->
+			<!-- Compress Button (with integrated progress bar) -->
 			{#if compressionState.selectedImages.length > 0 && !compressionState.showResults}
-				<div class="flex justify-center">
-					<CompressButton />
-				</div>
-			{/if}
-
-			<!-- Progress Bar -->
-			{#if compressionState.isCompressing}
-				<ProgressBar />
+				<CompressButton />
 			{/if}
 
 			<!-- Results Display -->

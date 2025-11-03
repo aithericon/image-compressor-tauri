@@ -3,8 +3,6 @@ use std::fs;
 use std::time::Instant;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use tokio::sync::mpsc;
-use tokio::runtime::Handle;
 use image_compressor::{Factor, FolderCompressor, compressor::Compressor};
 use walkdir::WalkDir;
 use rayon::prelude::*;
@@ -13,10 +11,13 @@ use super::types::{CompressionConfig, CompressResult, ImageError, ProgressUpdate
 use super::analyzer::{has_valid_extension, is_valid_image};
 
 /// Compress images based on configuration
-pub async fn compress_images(
+pub fn compress_images<F>(
     config: CompressionConfig,
-    progress_tx: mpsc::Sender<ProgressUpdate>,
-) -> Result<CompressResult, String> {
+    progress_callback: F,
+) -> Result<CompressResult, String>
+where
+    F: Fn(ProgressUpdate) + Send + Sync,
+{
     // Validate configuration
     config.validate()?;
 
@@ -37,9 +38,6 @@ pub async fn compress_images(
 
     // Create compression factor
     let factor = Factor::new(config.quality, config.size_ratio);
-
-    // Capture Tokio runtime handle for sending progress from Rayon threads
-    let runtime_handle = Handle::current();
 
     // Configure Rayon thread pool size
     let thread_count = config.thread_count;
@@ -134,7 +132,7 @@ pub async fn compress_images(
                 // Update progress counter and send progress update
                 let current = processed.fetch_add(1, Ordering::Relaxed) + 1;
 
-                // Send progress update from Rayon thread to Tokio channel
+                // Send progress update directly via callback (like analysis does)
                 let filename = file_path
                     .file_name()
                     .and_then(|n| n.to_str())
@@ -147,11 +145,8 @@ pub async fn compress_images(
                     filename,
                 );
 
-                // Clone the sender and spawn send operation on Tokio runtime
-                let tx_clone = progress_tx.clone();
-                runtime_handle.spawn(async move {
-                    let _ = tx_clone.send(progress_update).await;
-                });
+                // Call progress callback directly from Rayon thread
+                progress_callback(progress_update);
             });
 
             // Extract final result
@@ -211,12 +206,15 @@ fn compress_single_image(
 }
 
 /// Compress entire folder using FolderCompressor
-pub async fn compress_folder(
+pub async fn compress_folder<F>(
     input_folder: &Path,
     output_folder: &Path,
     config: CompressionConfig,
-    progress_tx: mpsc::Sender<ProgressUpdate>,
-) -> Result<CompressResult, String> {
+    progress_callback: F,
+) -> Result<CompressResult, String>
+where
+    F: Fn(ProgressUpdate) + Send + Sync,
+{
     let start_time = Instant::now();
     let mut result = CompressResult::new();
 
@@ -252,11 +250,11 @@ pub async fn compress_folder(
     for (index, entry) in total_files.iter().enumerate() {
         let filename = entry.file_name().to_string_lossy().to_string();
 
-        let _ = progress_tx.send(ProgressUpdate::new(
+        progress_callback(ProgressUpdate::new(
             index + 1,
             result.total,
             filename.clone(),
-        )).await;
+        ));
 
         // Note: image_compressor's FolderCompressor processes all at once
         // We're simulating progress here, actual compression happens below

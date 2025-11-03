@@ -82,14 +82,9 @@
 		</div>
 
 		<!-- Estimated Result -->
-		<div class="bg-muted rounded-lg p-4">
-			<p class="text-sm font-medium">{m.compression_settings_estimated_result()}</p>
-			<p class="mt-2 text-2xl font-bold">
-				{formatBytes(totalOriginalSize)} → {formatBytes(totalEstimatedSize)}
-			</p>
-			<p class="text-muted-foreground mt-1 text-sm">
-				{formatBytes(estimatedBytesSaved)}
-				{m.compression_settings_saved()} ({estimatedSavingsPercent.toFixed(1)}%)
+		<div class="bg-muted rounded-md px-3 py-2">
+			<p class="text-muted-foreground text-xs">
+				{m.compression_settings_estimated_result()}: {formatBytes(totalOriginalSize)} → {formatBytes(totalEstimatedSize)} ({estimatedSavingsPercent.toFixed(1)}%)
 			</p>
 		</div>
 
