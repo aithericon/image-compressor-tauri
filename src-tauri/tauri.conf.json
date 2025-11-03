@@ -1,8 +1,8 @@
 {
   "$schema": "../../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "IronBank",
+  "productName": "Image Compressor - Aithericon",
   "version": "0.1.0",
-  "identifier": "com.ironbank.app",
+  "identifier": "eu.aithericon.imagecompressor",
   "build": {
     "frontendDist": "../build",
     "devUrl": "http://localhost:5173",
@@ -13,9 +13,11 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "IronBank",
-        "width": 1400,
-        "height": 900,
+        "title": "Image Compressor - Aithericon GmbH",
+        "width": 900,
+        "height": 700,
+        "minWidth": 700,
+        "minHeight": 500,
         "resizable": true,
         "fullscreen": false
       }

@@ -1,4 +1,57 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"hello_world": "Hello, {name} from en!"
+
+	"app_title": "Image Compressor",
+
+	"file_selector_drag_drop_title": "Drag & Drop Images or Folders Here",
+	"file_selector_drag_drop_subtitle": "Or use the buttons below to select files",
+	"file_selector_select_files": "Select Files",
+	"file_selector_select_folder": "Select Folder",
+	"file_selector_analyzing": "Analyzing...",
+	"file_selector_analyzing_images": "Analyzing images...",
+
+	"image_list_title": "Selected Images",
+	"image_list_file": "file",
+	"image_list_files": "files",
+	"image_list_clear_all": "Clear All",
+	"image_list_sort_by": "Sort by",
+	"image_list_sort_name_asc": "Name (A-Z)",
+	"image_list_sort_name_desc": "Name (Z-A)",
+	"image_list_sort_size_asc": "Size (smallest)",
+	"image_list_sort_size_desc": "Size (largest)",
+
+	"compression_settings_title": "Compression Settings",
+	"compression_settings_description": "Adjust quality and size parameters for compression",
+	"compression_settings_quality": "Quality",
+	"compression_settings_size_ratio": "Size Ratio",
+	"compression_settings_estimated_result": "Estimated Result",
+	"compression_settings_saved": "saved",
+	"compression_settings_output_folder": "Output Folder",
+	"compression_settings_output_folder_placeholder": "Select output folder...",
+
+	"compress_button_compress": "Compress Images",
+	"compress_button_compressing": "Compressing...",
+
+	"progress_bar_compressing": "Compressing Images...",
+	"progress_bar_of": "of",
+	"progress_bar_processing": "Processing:",
+
+	"results_complete_title": "Compression Complete!",
+	"results_complete_with_errors_title": "Compression Completed with Errors",
+	"results_successfully_compressed": "Successfully compressed:",
+	"results_images": "images",
+	"results_space_saved": "Space Saved",
+	"results_original_size": "Original Size",
+	"results_compressed_size": "Compressed Size",
+	"results_time_taken": "Time Taken",
+	"results_savings_percentage": "Savings Percentage",
+	"results_errors": "Errors",
+
+	"action_buttons_open_folder": "Open Output Folder",
+	"action_buttons_compress_more": "Compress More Images",
+
+	"footer_copyright": "© 2025 Aithericon GmbH",
+	"footer_license": "MIT License",
+	"footer_website": "aithericon.eu",
+	"footer_support": "support@aithericon.eu"
 }

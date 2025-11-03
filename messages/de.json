@@ -1,4 +1,57 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"hello_world": "Hello, {name} from de!"
+
+	"app_title": "Bildkomprimierung",
+
+	"file_selector_drag_drop_title": "Bilder oder Ordner hier ablegen",
+	"file_selector_drag_drop_subtitle": "Oder verwenden Sie die Schaltflächen unten, um Dateien auszuwählen",
+	"file_selector_select_files": "Dateien auswählen",
+	"file_selector_select_folder": "Ordner auswählen",
+	"file_selector_analyzing": "Analysiere...",
+	"file_selector_analyzing_images": "Bilder werden analysiert...",
+
+	"image_list_title": "Ausgewählte Bilder",
+	"image_list_file": "Datei",
+	"image_list_files": "Dateien",
+	"image_list_clear_all": "Alle löschen",
+	"image_list_sort_by": "Sortieren nach",
+	"image_list_sort_name_asc": "Name (A-Z)",
+	"image_list_sort_name_desc": "Name (Z-A)",
+	"image_list_sort_size_asc": "Größe (kleinste)",
+	"image_list_sort_size_desc": "Größe (größte)",
+
+	"compression_settings_title": "Komprimierungseinstellungen",
+	"compression_settings_description": "Qualität und Größenparameter für die Komprimierung anpassen",
+	"compression_settings_quality": "Qualität",
+	"compression_settings_size_ratio": "Größenverhältnis",
+	"compression_settings_estimated_result": "Geschätztes Ergebnis",
+	"compression_settings_saved": "gespart",
+	"compression_settings_output_folder": "Ausgabeordner",
+	"compression_settings_output_folder_placeholder": "Ausgabeordner auswählen...",
+
+	"compress_button_compress": "Bilder komprimieren",
+	"compress_button_compressing": "Komprimierung läuft...",
+
+	"progress_bar_compressing": "Bilder werden komprimiert...",
+	"progress_bar_of": "von",
+	"progress_bar_processing": "Verarbeitung:",
+
+	"results_complete_title": "Komprimierung abgeschlossen!",
+	"results_complete_with_errors_title": "Komprimierung mit Fehlern abgeschlossen",
+	"results_successfully_compressed": "Erfolgreich komprimiert:",
+	"results_images": "Bilder",
+	"results_space_saved": "Eingesparter Speicherplatz",
+	"results_original_size": "Ursprüngliche Größe",
+	"results_compressed_size": "Komprimierte Größe",
+	"results_time_taken": "Benötigte Zeit",
+	"results_savings_percentage": "Einsparung in Prozent",
+	"results_errors": "Fehler",
+
+	"action_buttons_open_folder": "Ausgabeordner öffnen",
+	"action_buttons_compress_more": "Weitere Bilder komprimieren",
+
+	"footer_copyright": "© 2025 Aithericon GmbH",
+	"footer_license": "MIT-Lizenz",
+	"footer_website": "aithericon.eu",
+	"footer_support": "support@aithericon.eu"
 }

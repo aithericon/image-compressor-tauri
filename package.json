@@ -1,8 +1,12 @@
 {
-	"name": "sveltekit-tauri-starter",
+	"name": "image-compressor",
 	"private": true,
 	"version": "0.1.0",
 	"type": "module",
+	"license": "MIT",
+	"author": "Aithericon GmbH",
+	"description": "Professional image compression tool for bulk JPEG conversion",
+	"homepage": "https://aithericon.eu",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",

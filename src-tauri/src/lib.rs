@@ -1,6 +1,22 @@
 use std::path::PathBuf;
 use tauri::Manager;
 
+// Module declarations
+mod compression;
+mod commands;
+
+// Import all commands
+use commands::{
+    file_ops::{
+        select_folder, select_files, open_in_explorer, get_default_output_folder,
+        validate_paths, get_app_directories, ensure_directory_exists, check_path_exists,
+    },
+    compress::{
+        analyze_images, compress_images, estimate_savings, cancel_compression,
+        get_default_config, get_system_info,
+    },
+};
+
 // Example Tauri command
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -28,6 +44,15 @@ pub fn run() {
             app.handle()
                 .plugin(tauri_plugin_stronghold::Builder::with_argon2(&salt_path).build())?;
 
+            // Initialize dialog plugin for file/folder selection
+            app.handle().plugin(tauri_plugin_dialog::init())?;
+
+            // Initialize shell plugin for opening in explorer
+            app.handle().plugin(tauri_plugin_shell::init())?;
+
+            // Initialize fs plugin for file system operations
+            app.handle().plugin(tauri_plugin_fs::init())?;
+
             // Optional: Enable logging in development mode
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -44,7 +69,26 @@ pub fn run() {
             }
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet, get_app_version])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            get_app_version,
+            // File operations commands
+            select_folder,
+            select_files,
+            open_in_explorer,
+            get_default_output_folder,
+            validate_paths,
+            get_app_directories,
+            ensure_directory_exists,
+            check_path_exists,
+            // Compression commands
+            analyze_images,
+            compress_images,
+            estimate_savings,
+            cancel_compression,
+            get_default_config,
+            get_system_info,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
