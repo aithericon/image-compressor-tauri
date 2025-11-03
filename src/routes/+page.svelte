@@ -96,7 +96,7 @@
 			{/if}
 
 			<!-- Progress Bar -->
-			{#if compressionState.isCompressing && compressionState.progress}
+			{#if compressionState.isCompressing}
 				<ProgressBar />
 			{/if}
 
