@@ -93,6 +93,19 @@ export interface ProgressUpdate {
 }
 
 /**
+ * Progress update emitted during image analysis.
+ * Used to show analysis progress when loading large folders.
+ */
+export interface AnalysisProgress {
+	/** Current image being analyzed (1-based index) */
+	current: number;
+	/** Total number of images to analyze */
+	total: number;
+	/** Progress percentage (0-100) */
+	percent: number;
+}
+
+/**
  * Result of validating a file path.
  * Used to check if files exist and are valid images before processing.
  */

@@ -36,3 +36,4 @@ base64 = "0.22"
 num_cpus = "1.16"
 dirs = "5.0"
 uuid = { version = "1.6", features = ["v4"] }
+rayon = "1.10"

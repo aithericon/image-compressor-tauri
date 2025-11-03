@@ -10,16 +10,19 @@ use crate::compression::{
     compress_images as compress_images_internal,
 };
 
-/// Analyze images without compressing them
+/// Analyze images without compressing them (with progress events)
 #[tauri::command]
 pub async fn analyze_images(
+    app: tauri::AppHandle,
     paths: Vec<String>,
     quality: Option<f32>,
     size_ratio: Option<f32>,
+    generate_thumbnails: Option<bool>,
 ) -> Result<Vec<ImageInfo>, String> {
     // Use default values if not provided
     let quality = quality.unwrap_or(85.0);
     let size_ratio = size_ratio.unwrap_or(0.8);
+    let generate_thumbnails = generate_thumbnails.unwrap_or(true);
 
     // Validate parameters
     if quality < 0.0 || quality > 100.0 {
@@ -34,9 +37,20 @@ pub async fn analyze_images(
         return Err("No paths provided for analysis".to_string());
     }
 
-    // Run analysis in a blocking task
+    // Run analysis in a blocking task with progress reporting
     let result = tokio::task::spawn_blocking(move || {
-        analyze_images_internal(&paths, quality, size_ratio)
+        analyze_images_internal(&paths, quality, size_ratio, generate_thumbnails, |current, total| {
+            // Emit progress event (throttle updates to avoid flooding)
+            if current % 5 == 0 || current == total {
+                let percent = (current as f32 / total as f32 * 100.0) as u32;
+                let progress = AnalysisProgress {
+                    current,
+                    total,
+                    percent,
+                };
+                let _ = app.emit("analysis:progress", &progress);
+            }
+        })
     })
     .await
     .map_err(|e| format!("Analysis task failed: {}", e))?;
@@ -44,8 +58,18 @@ pub async fn analyze_images(
     if result.is_empty() {
         Err("No valid images found in the provided paths".to_string())
     } else {
+        // Emit completion event
+        let _ = app.emit("analysis:complete", result.len());
         Ok(result)
     }
+}
+
+/// Analysis progress event payload
+#[derive(serde::Serialize, Clone)]
+pub struct AnalysisProgress {
+    pub current: usize,
+    pub total: usize,
+    pub percent: u32,
 }
 
 /// Main compression function that emits progress events
@@ -110,12 +134,13 @@ pub async fn compress_images(
 /// Estimate compression savings for a set of images
 #[tauri::command]
 pub async fn estimate_savings(
+    app: tauri::AppHandle,
     paths: Vec<String>,
     quality: f32,
     size_ratio: f32,
 ) -> Result<SavingsEstimate, String> {
-    // Analyze images to get current sizes and estimated sizes
-    let images = analyze_images(paths, Some(quality), Some(size_ratio)).await?;
+    // Analyze images to get current sizes and estimated sizes (without thumbnails for speed)
+    let images = analyze_images(app, paths, Some(quality), Some(size_ratio), Some(false)).await?;
 
     if images.is_empty() {
         return Ok(SavingsEstimate {

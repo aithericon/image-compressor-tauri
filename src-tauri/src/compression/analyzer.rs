@@ -1,10 +1,13 @@
 use std::path::Path;
 use std::fs;
 use std::io;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
 use image::{DynamicImage, ImageFormat};
 use image::imageops::FilterType;
 use walkdir::WalkDir;
 use base64::{Engine as _, engine::general_purpose};
+use rayon::prelude::*;
 
 use super::types::{ImageInfo, PathValidation};
 
@@ -66,10 +69,24 @@ pub fn is_valid_image(path: &Path) -> Result<(), String> {
     }
 }
 
-/// Analyze a single image file and extract metadata
-pub fn analyze_image(path: &Path, quality: f32, size_ratio: f32) -> Result<ImageInfo, String> {
-    // Validate the image first
-    is_valid_image(path)?;
+/// Analyze a single image file and extract metadata (optimized - opens image only once)
+pub fn analyze_image(path: &Path, quality: f32, size_ratio: f32, generate_thumbnails: bool) -> Result<ImageInfo, String> {
+    // Check if file exists and is valid
+    if !path.exists() {
+        return Err(format!("File does not exist: {}", path.display()));
+    }
+
+    if !path.is_file() {
+        return Err(format!("Path is not a file: {}", path.display()));
+    }
+
+    // Check extension before trying to open
+    if !has_valid_extension(path) {
+        return Err(format!(
+            "Unsupported file extension. Supported formats: {}",
+            SUPPORTED_EXTENSIONS.join(", ")
+        ));
+    }
 
     // Get file metadata
     let metadata = fs::metadata(path)
@@ -77,9 +94,9 @@ pub fn analyze_image(path: &Path, quality: f32, size_ratio: f32) -> Result<Image
 
     let original_size = metadata.len();
 
-    // Open the image to get dimensions and format
+    // Open the image ONCE - use for validation, dimensions, and thumbnail
     let img = image::open(path)
-        .map_err(|e| format!("Failed to open image: {}", e))?;
+        .map_err(|e| format!("Invalid or corrupted image file: {}", e))?;
 
     let (width, height) = (img.width(), img.height());
 
@@ -89,8 +106,12 @@ pub fn analyze_image(path: &Path, quality: f32, size_ratio: f32) -> Result<Image
     // Estimate compressed size
     let estimated_size = estimate_compressed_size(original_size, &format, quality, size_ratio);
 
-    // Generate thumbnail - use .ok() to make it optional (won't fail the entire analysis)
-    let thumbnail = generate_thumbnail(&img).ok();
+    // Generate thumbnail only if requested (thumbnails are expensive)
+    let thumbnail = if generate_thumbnails {
+        generate_thumbnail(&img).ok()
+    } else {
+        None
+    };
 
     // Extract filename
     let filename = path.file_name()
@@ -155,9 +176,19 @@ pub fn estimate_compressed_size(original_size: u64, format: &str, quality: f32, 
     estimated.max(1024).min(original_size)
 }
 
-/// Analyze multiple image paths
-pub fn analyze_images(paths: &[String], quality: f32, size_ratio: f32) -> Vec<ImageInfo> {
-    let mut results = Vec::new();
+/// Analyze multiple image paths with parallel processing and progress reporting
+pub fn analyze_images<F>(
+    paths: &[String],
+    quality: f32,
+    size_ratio: f32,
+    generate_thumbnails: bool,
+    mut progress_callback: F
+) -> Vec<ImageInfo>
+where
+    F: FnMut(usize, usize) + Send + Sync,
+{
+    // First, collect all image paths to process
+    let mut image_paths = Vec::new();
 
     for path_str in paths {
         let path = Path::new(path_str);
@@ -170,18 +201,41 @@ pub fn analyze_images(paths: &[String], quality: f32, size_ratio: f32) -> Vec<Im
                 .filter(|e| e.file_type().is_file())
             {
                 if has_valid_extension(entry.path()) {
-                    if let Ok(info) = analyze_image(entry.path(), quality, size_ratio) {
-                        results.push(info);
-                    }
+                    image_paths.push(entry.path().to_path_buf());
                 }
             }
         } else {
             // Single file
-            if let Ok(info) = analyze_image(path, quality, size_ratio) {
-                results.push(info);
+            if has_valid_extension(path) {
+                image_paths.push(path.to_path_buf());
             }
         }
     }
+
+    let total = image_paths.len();
+    if total == 0 {
+        return Vec::new();
+    }
+
+    // Use atomic counter for thread-safe progress tracking
+    let processed = Arc::new(AtomicUsize::new(0));
+
+    // Process images in parallel using Rayon
+    let results: Vec<ImageInfo> = image_paths
+        .par_iter()
+        .filter_map(|path| {
+            // Analyze the image
+            let result = analyze_image(path, quality, size_ratio, generate_thumbnails).ok();
+
+            // Update progress counter
+            let current = processed.fetch_add(1, Ordering::Relaxed) + 1;
+
+            // Report progress (note: this will be called from multiple threads)
+            progress_callback(current, total);
+
+            result
+        })
+        .collect();
 
     results
 }

@@ -1,16 +1,43 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Card, CardContent } from '$lib/components/ui/card';
+	import { Progress } from '$lib/components/ui/progress';
 	import { compressionState, addImages } from '$lib/stores/compression-state.svelte';
 	import { selectFiles, selectFolder, analyzeImages } from '$lib/utils/tauri-commands';
 	import { FolderOpen, FileImage, Loader2 } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import { listen } from '@tauri-apps/api/event';
+	import type { AnalysisProgress } from '$lib/types/compression';
 	import * as m from '$lib/paraglide/messages';
 
 	let isDragOver = $state(false);
 
+	// Event listeners
+	let unlistenAnalysisProgress: (() => void) | null = null;
+
+	onMount(() => {
+		// Set up analysis progress listener
+		const setupListeners = async () => {
+			unlistenAnalysisProgress = await listen<AnalysisProgress>(
+				'analysis:progress',
+				(event) => {
+					compressionState.analysisProgress = event.payload;
+				}
+			);
+		};
+
+		setupListeners();
+
+		// Cleanup listeners on component destroy
+		return () => {
+			if (unlistenAnalysisProgress) unlistenAnalysisProgress();
+		};
+	});
+
 	async function handleFileSelect() {
 		try {
 			compressionState.isAnalyzing = true;
+			compressionState.analysisProgress = null;
 			const files = await selectFiles();
 			if (files.length > 0) {
 				const imageInfo = await analyzeImages(files);
@@ -20,12 +47,14 @@
 			console.error('Error selecting files:', error);
 		} finally {
 			compressionState.isAnalyzing = false;
+			compressionState.analysisProgress = null;
 		}
 	}
 
 	async function handleFolderSelect() {
 		try {
 			compressionState.isAnalyzing = true;
+			compressionState.analysisProgress = null;
 			const folder = await selectFolder();
 			if (folder) {
 				console.log('Selected folder:', folder);
@@ -37,6 +66,7 @@
 			console.error('Error selecting folder:', error);
 		} finally {
 			compressionState.isAnalyzing = false;
+			compressionState.analysisProgress = null;
 		}
 	}
 
@@ -66,12 +96,26 @@
 >
 	<CardContent class="p-12">
 		{#if compressionState.isAnalyzing}
-			<!-- Large analyzing animation -->
+			<!-- Large analyzing animation with progress -->
 			<div class="flex flex-col items-center justify-center space-y-6 py-12">
 				<Loader2 class="text-primary h-20 w-20 animate-spin" />
-				<div class="text-center">
-					<p class="text-xl font-semibold">{m.file_selector_analyzing_images()}</p>
-					<p class="text-muted-foreground mt-2 text-sm">Please wait while we analyze your images</p>
+				<div class="w-full max-w-md space-y-4 text-center">
+					<div>
+						<p class="text-xl font-semibold">{m.file_selector_analyzing_images()}</p>
+						{#if compressionState.analysisProgress}
+							<p class="text-muted-foreground mt-2 text-sm">
+								Analyzing {compressionState.analysisProgress.current} of {compressionState.analysisProgress.total} images
+								({compressionState.analysisProgress.percent}%)
+							</p>
+						{:else}
+							<p class="text-muted-foreground mt-2 text-sm">
+								Please wait while we analyze your images
+							</p>
+						{/if}
+					</div>
+					{#if compressionState.analysisProgress}
+						<Progress value={compressionState.analysisProgress.percent} class="w-full" />
+					{/if}
 				</div>
 			</div>
 		{:else}

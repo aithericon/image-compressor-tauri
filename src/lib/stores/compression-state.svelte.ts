@@ -7,6 +7,7 @@ import type {
 	ImageInfo,
 	CompressResult,
 	ProgressUpdate,
+	AnalysisProgress,
 	CompressionConfig
 } from '$lib/types/compression';
 import { estimateCompressedSize } from '$lib/utils/format';
@@ -25,6 +26,7 @@ export const compressionState = $state({
 	isCompressing: false,
 
 	// Progress tracking
+	analysisProgress: null as AnalysisProgress | null,
 	progress: null as ProgressUpdate | null,
 
 	// Results
@@ -157,6 +159,7 @@ export function resetState() {
 	compressionState.selectedImages = [];
 	compressionState.isAnalyzing = false;
 	compressionState.isCompressing = false;
+	compressionState.analysisProgress = null;
 	compressionState.progress = null;
 	compressionState.result = null;
 	compressionState.showResults = false;
