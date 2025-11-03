@@ -16,7 +16,7 @@ name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.9", features = [] }
+tauri-build = { version = "2.5", features = [] }
 
 [dependencies]
 serde_json = "1.0"
@@ -24,10 +24,10 @@ serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 tauri = { version = "2.9", features = [] }
 tauri-plugin-log = "2"
-tauri-plugin-stronghold = "2.9"
-tauri-plugin-dialog = "2.9"
-tauri-plugin-shell = "2.9"
-tauri-plugin-fs = "2.9"
+tauri-plugin-stronghold = "2.3"
+tauri-plugin-dialog = "2.4"
+tauri-plugin-shell = "2.3"
+tauri-plugin-fs = "2.4"
 image_compressor = "1.5.2"
 tokio = { version = "1", features = ["full"] }
 walkdir = "2.4"
