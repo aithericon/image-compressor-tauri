@@ -1,9 +1,12 @@
 use std::path::{Path, PathBuf};
 use std::fs;
 use std::time::Instant;
+use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use tokio::sync::mpsc;
 use image_compressor::{Factor, FolderCompressor, compressor::Compressor};
 use walkdir::WalkDir;
+use rayon::prelude::*;
 
 use super::types::{CompressionConfig, CompressResult, ImageError, ProgressUpdate};
 use super::analyzer::{has_valid_extension, is_valid_image};
@@ -17,7 +20,6 @@ pub async fn compress_images(
     config.validate()?;
 
     let start_time = Instant::now();
-    let mut result = CompressResult::new();
 
     // Create output directory if it doesn't exist
     let output_path = Path::new(&config.output_folder);
@@ -26,7 +28,7 @@ pub async fn compress_images(
 
     // Collect all image files to process
     let files_to_process = collect_image_files(&config.source_paths)?;
-    result.total = files_to_process.len();
+    let total_files = files_to_process.len();
 
     if files_to_process.is_empty() {
         return Err("No valid image files found to compress".to_string());
@@ -35,76 +37,121 @@ pub async fn compress_images(
     // Create compression factor
     let factor = Factor::new(config.quality, config.size_ratio);
 
-    // Process files in batches using thread pool
-    let chunk_size = (files_to_process.len() / config.thread_count).max(1);
-    let chunks: Vec<_> = files_to_process.chunks(chunk_size).collect();
+    // Configure Rayon thread pool size
+    let thread_count = config.thread_count;
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(thread_count)
+        .build()
+        .map_err(|e| format!("Failed to create thread pool: {}", e))?;
 
-    // Process each chunk
-    for (chunk_idx, chunk) in chunks.iter().enumerate() {
-        for (file_idx, file_path) in chunk.iter().enumerate() {
-            let current_index = chunk_idx * chunk_size + file_idx + 1;
+    let mut result = pool.install(|| {
+            // Use atomic counter for thread-safe progress tracking
+            let processed = Arc::new(AtomicUsize::new(0));
+            let mut compression_result = CompressResult::new();
+            compression_result.total = total_files;
+            let result_mutex = Arc::new(Mutex::new(compression_result));
 
-            // Send progress update
-            let filename = file_path
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or("unknown")
-                .to_string();
+            // Process files in parallel
+            files_to_process.par_iter().for_each(|file_path| {
+                // Get original file size
+                let original_size = fs::metadata(file_path)
+                    .map(|m| m.len())
+                    .unwrap_or(0);
 
-            let _ = progress_tx.send(ProgressUpdate::new(
-                current_index,
-                result.total,
-                filename.clone(),
-            )).await;
+                // Determine output path
+                let output_file_path = match get_output_path(
+                    file_path,
+                    &output_path,
+                    config.preserve_structure,
+                    &config.source_paths,
+                ) {
+                    Ok(path) => path,
+                    Err(e) => {
+                        // Lock result to add error
+                        if let Ok(mut result) = result_mutex.lock() {
+                            result.add_error(ImageError::new(
+                                file_path.display().to_string(),
+                                e,
+                            ));
+                        }
+                        return;
+                    }
+                };
 
-            // Determine output path
-            let output_file_path = get_output_path(
-                file_path,
-                &output_path,
-                config.preserve_structure,
-                &config.source_paths,
-            )?;
-
-            // Ensure output directory exists
-            if let Some(parent) = output_file_path.parent() {
-                fs::create_dir_all(parent)
-                    .map_err(|e| format!("Failed to create output subdirectory: {}", e))?;
-            }
-
-            // Get original file size
-            let original_size = fs::metadata(file_path)
-                .map(|m| m.len())
-                .unwrap_or(0);
-
-            // Compress the image
-            match compress_single_image(file_path, &output_file_path, factor) {
-                Ok(compressed_size) => {
-                    let saved = original_size.saturating_sub(compressed_size);
-                    result.add_success(saved);
-
-                    log::info!(
-                        "Compressed {} -> {} (saved {} bytes)",
-                        file_path.display(),
-                        output_file_path.display(),
-                        saved
-                    );
+                // Ensure output directory exists
+                if let Some(parent) = output_file_path.parent() {
+                    if let Err(e) = fs::create_dir_all(parent) {
+                        if let Ok(mut result) = result_mutex.lock() {
+                            result.add_error(ImageError::new(
+                                file_path.display().to_string(),
+                                format!("Failed to create output directory: {}", e),
+                            ));
+                        }
+                        return;
+                    }
                 }
-                Err(e) => {
-                    let error = ImageError::new(
-                        file_path.display().to_string(),
-                        e,
-                    );
-                    result.add_error(error.clone());
 
-                    log::error!(
-                        "Failed to compress {}: {}",
-                        file_path.display(),
-                        error.error
-                    );
+                // Compress the image
+                match compress_single_image(file_path, &output_file_path, factor) {
+                    Ok(compressed_size) => {
+                        let saved = original_size.saturating_sub(compressed_size);
+
+                        // Lock result to add success
+                        if let Ok(mut result) = result_mutex.lock() {
+                            result.add_success(saved);
+                        }
+
+                        log::info!(
+                            "Compressed {} -> {} (saved {} bytes)",
+                            file_path.display(),
+                            output_file_path.display(),
+                            saved
+                        );
+                    }
+                    Err(e) => {
+                        let error = ImageError::new(
+                            file_path.display().to_string(),
+                            e,
+                        );
+
+                        // Lock result to add error
+                        if let Ok(mut result) = result_mutex.lock() {
+                            result.add_error(error.clone());
+                        }
+
+                        log::error!(
+                            "Failed to compress {}: {}",
+                            file_path.display(),
+                            error.error
+                        );
+                    }
                 }
-            }
-        }
-    }
+
+                // Update progress counter and send progress update
+                let current = processed.fetch_add(1, Ordering::Relaxed) + 1;
+
+                // Send progress update (async send needs runtime, so we use blocking)
+                let filename = file_path
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or("unknown")
+                    .to_string();
+
+                let progress_update = ProgressUpdate::new(
+                    current,
+                    total_files,
+                    filename,
+                );
+
+                // Try to send progress (ignore errors if channel is closed)
+                let _ = progress_tx.blocking_send(progress_update);
+            });
+
+            // Extract final result
+            result_mutex.lock()
+                .map(|r| r.clone())
+                .unwrap_or_else(|_| CompressResult::new())
+        });
 
     result.duration_ms = start_time.elapsed().as_millis();
 
