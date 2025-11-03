@@ -70,3 +70,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: --debug # Build in debug mode for faster testing
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: app-${{ matrix.platform }}-debug
+          path: |
+            src-tauri/target/debug/bundle/
+          retention-days: 7
