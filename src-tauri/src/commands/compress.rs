@@ -84,8 +84,9 @@ pub async fn compress_images(
     // Validate configuration
     config.validate()?;
 
-    // Create progress channel
-    let (tx, mut rx) = mpsc::channel::<ProgressUpdate>(100);
+    // Create progress channel with larger buffer for parallel compression
+    // Buffer size should accommodate parallel threads sending updates
+    let (tx, mut rx) = mpsc::channel::<ProgressUpdate>(1000);
 
     // Clone app handle for the progress task
     let app_handle = app.clone();

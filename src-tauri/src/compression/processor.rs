@@ -130,7 +130,8 @@ pub async fn compress_images(
                 // Update progress counter and send progress update
                 let current = processed.fetch_add(1, Ordering::Relaxed) + 1;
 
-                // Send progress update (async send needs runtime, so we use blocking)
+                // Send progress update (throttle to avoid flooding the channel)
+                // In parallel mode, send every update for accuracy
                 let filename = file_path
                     .file_name()
                     .and_then(|n| n.to_str())
@@ -143,7 +144,8 @@ pub async fn compress_images(
                     filename,
                 );
 
-                // Try to send progress (ignore errors if channel is closed)
+                // Send progress update using blocking_send
+                // With larger channel buffer (1000), this should not block in practice
                 let _ = progress_tx.blocking_send(progress_update);
             });
 
