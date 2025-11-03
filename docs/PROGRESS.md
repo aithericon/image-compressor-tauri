@@ -3,6 +3,7 @@
 > Track your implementation progress by checking off completed items.
 
 **Legend:**
+
 - ⬜ Not started
 - 🟦 In progress
 - ✅ Completed
@@ -13,6 +14,7 @@
 ## Phase 1: Backend Foundation (2-3 days)
 
 ### Dependencies & Setup
+
 - [x] Add `image_compressor` to Cargo.toml
 - [x] Add `tokio` with full features to Cargo.toml
 - [x] Add `walkdir` to Cargo.toml
@@ -26,6 +28,7 @@
 - [x] Update tauri.conf.json with product name and window configuration
 
 ### Module Structure
+
 - [x] Create `src-tauri/src/compression/` directory
 - [x] Create `src-tauri/src/compression/mod.rs`
 - [x] Create `src-tauri/src/compression/analyzer.rs`
@@ -37,6 +40,7 @@
 - [x] Create `src-tauri/src/commands/compress.rs`
 
 ### Compression Logic
+
 - [x] Implement `Factor` wrapper for quality and size ratio
 - [x] Implement single image compression function
 - [x] Implement batch compression with thread pool
@@ -45,6 +49,7 @@
 - [ ] Test compression with various image formats (needs testing)
 
 ### Tauri Commands - File Operations
+
 - [x] Implement `select_folder()` command
 - [x] Implement `select_files()` command with image filters
 - [x] Implement `open_in_explorer()` command (cross-platform)
@@ -55,6 +60,7 @@
 - [x] Implement `check_path_exists()` command (extra)
 
 ### Tauri Commands - Image Operations
+
 - [x] Implement `analyze_images()` command
 - [x] Implement size estimation logic
 - [ ] Implement thumbnail generation (deferred - optional)
@@ -67,6 +73,7 @@
 - [x] Implement `get_system_info()` command (extra)
 
 ### Testing
+
 - [ ] Write unit tests for compression logic
 - [ ] Write unit tests for path validation
 - [ ] Write unit tests for file naming conflicts
@@ -80,6 +87,7 @@
 - [ ] Test with corrupted images
 
 ### Configuration
+
 - [x] Register all commands in `lib.rs`
 - [x] Initialize tauri-plugin-dialog
 - [x] Initialize tauri-plugin-shell
@@ -96,6 +104,7 @@
 ## Phase 2: Frontend Core (1-2 days)
 
 ### Layout Cleanup
+
 - [x] Remove existing dashboard page
 - [x] Remove existing settings page
 - [x] Remove sidebar navigation components
@@ -104,6 +113,7 @@
 - [x] Create `src/routes/+page.ts` for loading defaults
 
 ### Type Definitions
+
 - [x] Create `src/lib/types/` directory
 - [x] Create `src/lib/types/compression.ts`
 - [x] Define `CompressionConfig` interface
@@ -115,6 +125,7 @@
 - [x] Add JSDoc comments to all types
 
 ### State Management
+
 - [x] Create `src/lib/stores/` directory
 - [x] Create `src/lib/stores/compression-state.svelte.ts`
 - [x] Implement reactive state with Svelte 5 `$state()`
@@ -126,6 +137,7 @@
 - [x] Add state for settings
 
 ### Utilities
+
 - [x] Create `src/lib/utils/format.ts`
 - [x] Implement `formatBytes()` function
 - [x] Implement `formatDuration()` function
@@ -141,6 +153,7 @@
 - [x] Implement typed wrapper for `validate_paths()`
 
 ### Event System
+
 - [x] Set up listener for `compression:progress` event
 - [x] Set up listener for `compression:complete` event
 - [x] Connect events to state updates
@@ -153,6 +166,7 @@
 ## Phase 3: UI Components (3-4 days)
 
 ### File Selection Component
+
 - [x] Create `src/lib/components/FileSelector.svelte`
 - [x] Implement drag-and-drop zone
 - [x] Add visual feedback for drag-over state
@@ -165,6 +179,7 @@
 - [ ] Test drag-and-drop functionality (pending backend)
 
 ### Image Display Components
+
 - [x] Create `src/lib/components/ImageList.svelte`
 - [x] Implement scrollable container
 - [x] Add total count and size display
@@ -180,6 +195,7 @@
 - [ ] Test with large number of images (100+) (pending backend)
 
 ### Compression Settings Component
+
 - [x] Create `src/lib/components/CompressionSettings.svelte`
 - [x] Add quality slider using shadcn-svelte Slider
 - [x] Add live quality percentage display
@@ -194,6 +210,7 @@
 - [ ] Test slider interactions (pending backend)
 
 ### Action Components
+
 - [x] Create `src/lib/components/CompressButton.svelte`
 - [x] Implement idle state
 - [x] Implement compressing state
@@ -203,6 +220,7 @@
 - [x] Add loading spinner
 
 ### Progress Components
+
 - [x] Create `src/lib/components/ProgressBar.svelte`
 - [x] Use shadcn-svelte Progress component
 - [x] Display percentage
@@ -213,6 +231,7 @@
 - [ ] Test progress updates (pending backend)
 
 ### Results Components
+
 - [x] Create `src/lib/components/ResultsSummary.svelte`
 - [x] Display success/failure counts
 - [x] Display before/after sizes
@@ -229,6 +248,7 @@
 - [x] Style action buttons
 
 ### Theme Component
+
 - [x] Verify ThemeToggle.svelte works with new layout
 - [ ] Test dark mode on all components (pending full integration)
 
@@ -239,6 +259,7 @@
 ## Phase 4: Integration (1-2 days)
 
 ### File Selection Flow
+
 - [ ] Connect FileSelector to `select_files()` command
 - [ ] Connect FileSelector to `select_folder()` command
 - [ ] Implement drag-and-drop file handling
@@ -249,6 +270,7 @@
 - [ ] Test file selection workflow
 
 ### Compression Flow
+
 - [ ] Build CompressionConfig from state on compress
 - [ ] Call `compress_images()` command
 - [ ] Update progress from events
@@ -259,6 +281,7 @@
 - [ ] Test progress tracking
 
 ### Action Flows
+
 - [ ] Implement "Open in Explorer" functionality
 - [ ] Implement "Clear All" functionality
 - [ ] Implement "Compress More" functionality
@@ -266,6 +289,7 @@
 - [ ] Test all action buttons
 
 ### Settings Persistence
+
 - [ ] Save quality setting to localStorage
 - [ ] Save size ratio setting to localStorage
 - [ ] Save last output folder to localStorage
@@ -273,6 +297,7 @@
 - [ ] Test persistence across sessions
 
 ### Error Handling
+
 - [ ] Implement toast notifications for errors
 - [ ] Display validation errors in UI
 - [ ] Handle permission errors
@@ -282,6 +307,7 @@
 - [ ] Test error scenarios
 
 ### Integration Testing
+
 - [ ] Test complete workflow end-to-end
 - [ ] Test with JPG files
 - [ ] Test with PNG files
@@ -298,6 +324,7 @@
 ## Phase 5: Polish (2-3 days)
 
 ### Drag-and-Drop Enhancements
+
 - [ ] Prevent default browser file opening
 - [ ] Add visual feedback on drag-over
 - [ ] Support folder drops
@@ -305,6 +332,7 @@
 - [ ] Test drag-and-drop edge cases
 
 ### Keyboard Shortcuts
+
 - [ ] Implement Ctrl+O for file picker
 - [ ] Implement Ctrl+Shift+O for folder picker
 - [ ] Implement Enter to start compression
@@ -313,6 +341,7 @@
 - [ ] Test all keyboard shortcuts
 
 ### Loading States & Animations
+
 - [ ] Add skeleton loaders for analyzing state
 - [ ] Add smooth transitions between states
 - [ ] Add progress bar animations
@@ -320,6 +349,7 @@
 - [ ] Test animations in dark mode
 
 ### Settings Enhancements
+
 - [ ] Create compression presets (Web, Mobile, Print)
 - [ ] Add preset selector
 - [ ] Add advanced options panel
@@ -328,12 +358,14 @@
 - [ ] Style advanced settings
 
 ### Output Options
+
 - [ ] Add option to save alongside originals
 - [ ] Add custom filename suffix option
 - [ ] Add timestamp in filename option
 - [ ] Test output options
 
 ### Performance Optimizations
+
 - [ ] Implement virtual scrolling for large image lists (optional)
 - [ ] Debounce estimation calculations
 - [ ] Optimize component re-renders
@@ -341,12 +373,14 @@
 - [ ] Profile performance bottlenecks
 
 ### Responsive Design
+
 - [x] Set minimum window size in tauri.conf.json
 - [ ] Test layout at minimum size
 - [ ] Ensure layout adapts for smaller windows
 - [ ] Test on different screen resolutions
 
 ### Documentation
+
 - [ ] Update README.md with usage instructions
 - [ ] Add tooltips for compression settings
 - [ ] Add help text for advanced options
@@ -359,6 +393,7 @@
 ## Phase 6: Testing & Optimization (2-3 days)
 
 ### Unit Tests (Vitest)
+
 - [ ] Write tests for `formatBytes()`
 - [ ] Write tests for `formatDuration()`
 - [ ] Write tests for `calculateSavings()`
@@ -369,6 +404,7 @@
 - [ ] Run all unit tests
 
 ### Component Tests
+
 - [ ] Write tests for FileSelector
 - [ ] Write tests for ImageCard
 - [ ] Write tests for CompressionSettings
@@ -377,6 +413,7 @@
 - [ ] Run all component tests
 
 ### E2E Tests (Playwright)
+
 - [ ] Write test for file selection flow
 - [ ] Write test for compression flow
 - [ ] Write test for settings adjustment
@@ -386,6 +423,7 @@
 - [ ] Run all E2E tests
 
 ### Performance Testing
+
 - [ ] Test with 10 images
 - [ ] Test with 100 images
 - [ ] Test with 1000 images
@@ -398,6 +436,7 @@
 - [ ] Optimize slow operations
 
 ### Platform-Specific Testing
+
 - [ ] Test on Windows 10
 - [ ] Test on Windows 11
 - [ ] Test with paths containing spaces
@@ -408,12 +447,14 @@
 - [ ] Test on high-spec machine
 
 ### Bug Fixes
+
 - [ ] Fix all critical bugs
 - [ ] Fix all high-priority bugs
 - [ ] Fix medium-priority bugs (if time permits)
 - [ ] Verify all fixes with tests
 
 ### Code Quality
+
 - [ ] Run linter and fix issues
 - [ ] Run formatter on all files
 - [ ] Review code for improvements
@@ -428,6 +469,7 @@
 ## Deployment
 
 ### Pre-Deployment
+
 - [x] Update version in package.json (already at 0.1.0)
 - [x] Update version in tauri.conf.json (already at 0.1.0)
 - [x] Update version in Cargo.toml (already at 0.1.0)
@@ -437,6 +479,7 @@
 - [ ] Write release notes
 
 ### Build Configuration
+
 - [x] Configure window settings in tauri.conf.json
 - [ ] Configure bundle targets (NSIS, MSI)
 - [ ] Add/verify app icons
@@ -444,6 +487,7 @@
 - [ ] Test build configuration
 
 ### Testing Final Build
+
 - [ ] Run production build
 - [ ] Test installer on clean Windows machine
 - [ ] Verify app launches correctly
@@ -452,11 +496,13 @@
 - [ ] Verify file sizes are reasonable
 
 ### Code Signing (Optional)
+
 - [ ] Obtain code signing certificate
 - [ ] Configure certificate in tauri.conf.json
 - [ ] Test signed build
 
 ### Release
+
 - [ ] Create Git tag for version
 - [ ] Create GitHub Release
 - [ ] Upload NSIS installer
@@ -472,6 +518,7 @@
 ## Post-MVP Enhancements (Future)
 
 ### Additional Features
+
 - [ ] Add support for PNG output
 - [ ] Add support for WebP output
 - [ ] Implement compression presets
@@ -483,6 +530,7 @@
 - [ ] Implement auto-updater
 
 ### Platform Expansion
+
 - [ ] Build for macOS
 - [ ] Build for Linux
 - [ ] Test cross-platform compatibility
@@ -492,11 +540,13 @@
 ## Notes & Blockers
 
 ### Current Blockers
-*None - Phase 1 backend implementation is complete and compiling*
+
+_None - Phase 1 backend implementation is complete and compiling_
 
 ---
 
 ### Important Notes
+
 - Backend implementation complete with all Tauri commands
 - Using image_compressor crate v1.5.2 (not 0.1.4 as originally specified)
 - Dialog plugin API uses callbacks, not async/await pattern
@@ -507,7 +557,8 @@
 ---
 
 ### Questions
-*None currently*
+
+_None currently_
 
 ---
 
@@ -528,4 +579,4 @@
 
 ---
 
-*Last Updated: 2025-11-03*
+_Last Updated: 2025-11-03_

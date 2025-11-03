@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { compressionState, getCanCompress, buildConfig } from '$lib/stores/compression-state.svelte';
+	import {
+		compressionState,
+		getCanCompress,
+		buildConfig
+	} from '$lib/stores/compression-state.svelte';
 	import { compressImages } from '$lib/utils/tauri-commands';
 	import { Loader2, Zap } from 'lucide-svelte';
 	import * as m from '$lib/paraglide/messages';
@@ -24,12 +28,7 @@
 	}
 </script>
 
-<Button
-	size="lg"
-	onclick={handleCompress}
-	disabled={!getCanCompress()}
-	class="min-w-[200px]"
->
+<Button size="lg" onclick={handleCompress} disabled={!getCanCompress()} class="min-w-[200px]">
 	{#if compressionState.isCompressing}
 		<Loader2 class="mr-2 h-5 w-5 animate-spin" />
 		{m.compress_button_compressing()}

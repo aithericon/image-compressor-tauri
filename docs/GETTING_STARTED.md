@@ -3,11 +3,13 @@
 ## Quick Start
 
 1. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 2. **Run in development mode:**
+
    ```bash
    npm run tauri:dev
    ```
@@ -22,6 +24,7 @@
 This starter kit provides a minimal but complete foundation for building cross-platform desktop applications:
 
 ### Frontend
+
 - **SvelteKit** with **Svelte 5** (using runes)
 - **TypeScript** with strict mode
 - **TailwindCSS v4** for styling
@@ -30,12 +33,14 @@ This starter kit provides a minimal but complete foundation for building cross-p
 - Responsive sidebar layout with collapsible navigation
 
 ### Backend (Tauri)
+
 - **Tauri v2** for native desktop capabilities
 - **Rust** backend with example commands
 - **Tauri Stronghold** plugin for secure encrypted storage
 - Example commands for frontend-backend communication
 
 ### Example Pages
+
 - **Dashboard** - Demonstrates Tauri command invocation and UI layout
 - **Settings** - Shows theme switching and settings management
 
@@ -75,14 +80,14 @@ Create a new page in `src/routes/(app)/[your-page]/+page.svelte`:
 
 ```svelte
 <script lang="ts">
-  import Topbar from '$lib/components/topbar.svelte';
+	import Topbar from '$lib/components/topbar.svelte';
 </script>
 
 <div class="flex h-screen flex-col">
-  <Topbar title="Your Page" />
-  <div class="flex-1 overflow-auto p-6">
-    <!-- Your content here -->
-  </div>
+	<Topbar title="Your Page" />
+	<div class="flex-1 overflow-auto p-6">
+		<!-- Your content here -->
+	</div>
 </div>
 ```
 
@@ -148,9 +153,9 @@ Edit `src/app.css` to customize TailwindCSS theme:
 
 ```css
 @theme {
-  --color-primary: #3b82f6;
-  --color-secondary: #10b981;
-  /* Add your colors */
+	--color-primary: #3b82f6;
+	--color-secondary: #10b981;
+	/* Add your colors */
 }
 ```
 
@@ -165,19 +170,23 @@ Update the app name and logo:
 ## Development Tips
 
 ### Hot Reload
+
 Changes to Svelte/TS code hot reload automatically. Rust changes require a rebuild (automatic in dev mode).
 
 ### Debugging
+
 - **Frontend**: Use browser DevTools (Cmd/Ctrl + Shift + I in dev mode)
 - **Backend**: Check terminal output for Rust println! statements
 
 ### Testing
+
 ```bash
 npm run test:unit   # Run Vitest tests
 npm run test:e2e    # Run Playwright tests
 ```
 
 ### Code Quality
+
 ```bash
 npm run check       # Type-check TypeScript
 npm run lint        # Check formatting

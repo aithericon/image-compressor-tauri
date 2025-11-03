@@ -5,7 +5,6 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import ImageCard from './ImageCard.svelte';
 	import {
-		compressionState,
 		getSelectedCount,
 		getTotalOriginalSize,
 		getSortedImages,
@@ -23,17 +22,18 @@
 </script>
 
 <Card>
-	<CardHeader class="py-1.5 px-3">
+	<CardHeader class="px-3 py-1.5">
 		<div class="flex items-center justify-between">
 			<CardTitle class="text-sm leading-tight">
-				{m.image_list_title()} ({selectedCount} {selectedCount === 1 ? m.image_list_file() : m.image_list_files()},
+				{m.image_list_title()} ({selectedCount}
+				{selectedCount === 1 ? m.image_list_file() : m.image_list_files()},
 				{formatBytes(totalOriginalSize)})
 			</CardTitle>
 			<div class="flex items-center gap-2">
 				<!-- Sort dropdown -->
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger
-						class="inline-flex h-6 items-center justify-center gap-1 rounded-md border border-input bg-background px-2 text-xs font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+						class="border-input bg-background ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring inline-flex h-6 items-center justify-center gap-1 rounded-md border px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
 					>
 						<ArrowUpDown class="h-3 w-3" />
 						<span>{m.image_list_sort_by()}</span>
@@ -63,7 +63,7 @@
 			</div>
 		</div>
 	</CardHeader>
-	<CardContent class="py-2 px-3">
+	<CardContent class="px-3 py-2">
 		<ScrollArea class="h-[300px] w-full pr-2">
 			<div class="space-y-2">
 				{#each sortedImages as image (image.path)}

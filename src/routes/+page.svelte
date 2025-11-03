@@ -53,7 +53,7 @@
 	});
 </script>
 
-<div class="flex h-screen flex-col bg-background">
+<div class="bg-background flex h-screen flex-col">
 	<!-- Header -->
 	<header class="border-b px-6 py-4">
 		<div class="flex items-center justify-between">
@@ -110,12 +110,14 @@
 
 	<!-- Footer -->
 	<footer class="mt-auto border-t px-6 py-4">
-		<div class="flex items-center justify-between text-xs text-muted-foreground">
+		<div class="text-muted-foreground flex items-center justify-between text-xs">
 			<div class="flex items-center gap-4">
 				<span>{m.footer_copyright()}</span>
 				<span class="text-muted-foreground/60">•</span>
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 				<a
 					href="/license"
+					data-sveltekit-preload-data="hover"
 					class="hover:text-foreground transition-colors"
 				>
 					{m.footer_license()}
@@ -124,14 +126,14 @@
 					href="https://aithericon.eu"
 					target="_blank"
 					rel="noopener noreferrer"
-					class="flex items-center gap-1 hover:text-foreground transition-colors"
+					class="hover:text-foreground flex items-center gap-1 transition-colors"
 				>
 					<Globe class="h-3 w-3" />
 					<span>{m.footer_website()}</span>
 				</a>
 				<a
 					href="mailto:support@aithericon.eu"
-					class="flex items-center gap-1 hover:text-foreground transition-colors"
+					class="hover:text-foreground flex items-center gap-1 transition-colors"
 				>
 					<Mail class="h-3 w-3" />
 					<span>{m.footer_support()}</span>

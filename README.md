@@ -23,10 +23,12 @@ A minimal, user-friendly desktop application built by [Aithericon GmbH](https://
 ## Technology Stack
 
 ### Desktop Framework
+
 - **Tauri v2** - Secure, lightweight desktop runtime
 - **Rust** - High-performance backend with `image_compressor` library
 
 ### Frontend
+
 - **SvelteKit** - Modern web framework with static adapter
 - **Svelte 5** - Reactive UI with runes (`$state`, `$derived`, `$effect`)
 - **TypeScript** - Type-safe development with strict mode
@@ -34,6 +36,7 @@ A minimal, user-friendly desktop application built by [Aithericon GmbH](https://
 - **shadcn-svelte** - Beautiful, accessible UI components
 
 ### Internationalization
+
 - **Paraglide.js** - Type-safe i18n with localStorage persistence
 - **Languages**: English (en), German (de - default)
 
@@ -50,12 +53,14 @@ Before running the application, ensure you have:
 ### Installation
 
 1. **Clone the repository:**
+
    ```bash
    git clone git@github.com:aithericon/image-compressor-tauri.git
    cd image-compressor-tauri
    ```
 
 2. **Install dependencies:**
+
    ```bash
    npm install
    ```
@@ -74,6 +79,7 @@ npm run tauri:build
 ```
 
 Output locations:
+
 - **Windows**: `src-tauri/target/release/bundle/msi/` (MSI installer)
 - **macOS**: `src-tauri/target/release/bundle/dmg/` (DMG disk image)
 
@@ -151,6 +157,7 @@ npm run format           # Format code with Prettier
 ### 1. Image Analysis with Thumbnails
 
 When you select images, the app:
+
 - Scans all images in parallel
 - Generates 64x64px thumbnails (base64-encoded)
 - Calculates original and estimated compressed sizes
@@ -176,6 +183,7 @@ Two main settings control compression:
 ### 3. Multi-threaded Processing
 
 Compression uses all available CPU cores:
+
 - Thread pool sized to `num_cpus::get()`
 - Progress updates sent via Tauri events
 - Error handling per-image (one failure doesn't stop the batch)
@@ -183,6 +191,7 @@ Compression uses all available CPU cores:
 ### 4. Real-time Progress Tracking
 
 Progress updates include:
+
 - Current image being processed
 - Images completed count
 - Success/failure counts
@@ -197,13 +206,13 @@ Modern reactive state using Svelte 5 runes:
 ```typescript
 // compression-state.svelte.ts
 export const compressionState = $state({
-  selectedImages: [],
-  quality: 85,
-  sizeRatio: 100,
-  isCompressing: false,
-  progress: null,
-  result: null,
-  showResults: false
+	selectedImages: [],
+	quality: 85,
+	sizeRatio: 100,
+	isCompressing: false,
+	progress: null,
+	result: null,
+	showResults: false
 });
 ```
 
@@ -229,6 +238,7 @@ The project includes GitHub Actions workflows for automated building:
 ### Release Workflow (`.github/workflows/release.yml`)
 
 Triggered by version tags (e.g., `v1.0.0`):
+
 - Builds for Windows (x64), macOS Intel (x64), and macOS Apple Silicon (aarch64)
 - Creates GitHub release with installers
 - Supports code signing (optional, requires secrets)
@@ -236,6 +246,7 @@ Triggered by version tags (e.g., `v1.0.0`):
 ### Test Workflow (`.github/workflows/test.yml`)
 
 Runs on push to `main` or `develop`:
+
 - TypeScript type checking
 - Linting and formatting checks
 - Frontend build verification
@@ -254,6 +265,7 @@ To create a new release:
    - `src-tauri/tauri.conf.json`
 
 2. **Create and push a tag:**
+
    ```bash
    git add .
    git commit -m "Release v1.0.0"
@@ -274,6 +286,7 @@ To create a new release:
 ### Backend (Rust/Tauri)
 
 **Core Libraries:**
+
 - `image_compressor` (v1.5.2) - JPEG compression
 - `image` (v0.24) - Image decoding and thumbnail generation
 - `tokio` - Async runtime for parallel processing
@@ -282,28 +295,31 @@ To create a new release:
 
 **Key Tauri Commands:**
 
-| Command | Purpose |
-|---------|---------|
-| `select_folder()` | Open folder picker dialog |
-| `select_files()` | Open file picker for multiple images |
-| `analyze_images()` | Scan images and generate thumbnails |
-| `compress_images()` | Perform batch compression |
-| `open_in_explorer()` | Open output folder in file manager |
-| `get_default_output_folder()` | Get platform-specific default path |
+| Command                       | Purpose                              |
+| ----------------------------- | ------------------------------------ |
+| `select_folder()`             | Open folder picker dialog            |
+| `select_files()`              | Open file picker for multiple images |
+| `analyze_images()`            | Scan images and generate thumbnails  |
+| `compress_images()`           | Perform batch compression            |
+| `open_in_explorer()`          | Open output folder in file manager   |
+| `get_default_output_folder()` | Get platform-specific default path   |
 
 ### Frontend (SvelteKit)
 
 **State Management:**
+
 - Svelte 5 runes (`$state`, `$derived`, `$effect`)
 - No external state management library needed
 - Reactive by default
 
 **Component Architecture:**
+
 - Modular components for each UI section
 - shadcn-svelte for consistent, accessible UI
 - TailwindCSS for responsive styling
 
 **Build Configuration:**
+
 - Static adapter for Tauri compatibility
 - Vite for fast development and building
 - Paraglide plugin for i18n code generation
@@ -315,11 +331,13 @@ Since this is a desktop application built with Tauri, there are no browser compa
 ## Performance
 
 **Compression Speed:**
+
 - Depends on CPU cores and image sizes
 - Typical: 5-15 images/second on modern hardware
 - Progress updates sent every 100ms
 
 **Memory Usage:**
+
 - Base: ~50-100 MB
 - Per image: ~5-10 KB (thumbnail + metadata)
 - Efficient streaming processing (doesn't load all images into memory)
@@ -329,19 +347,23 @@ Since this is a desktop application built with Tauri, there are no browser compa
 ### Common Issues
 
 **1. App won't start:**
+
 - Ensure Rust toolchain is installed: `rustc --version`
 - Check Tauri prerequisites for your platform
 
 **2. Build fails:**
+
 - Clear caches: `rm -rf node_modules target && npm install`
 - Update dependencies: `cargo update` and `npm update`
 
 **3. Images not showing:**
+
 - Check file permissions
 - Verify image formats are supported
 - Check console logs in dev tools (Cmd/Ctrl + Shift + I)
 
 **4. Language not persisting:**
+
 - Language is stored in localStorage
 - Clearing browser data will reset to default (German)
 
@@ -384,6 +406,7 @@ SOFTWARE.
 ## Acknowledgments
 
 Built with:
+
 - [Tauri](https://tauri.app/) - Desktop application framework
 - [SvelteKit](https://kit.svelte.dev/) - Web framework
 - [Svelte](https://svelte.dev/) - Reactive UI library

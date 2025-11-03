@@ -14,11 +14,11 @@
 	}
 </script>
 
-<Card class="py-0 transition-colors hover:bg-muted/50">
+<Card class="hover:bg-muted/50 py-0 transition-colors">
 	<CardContent class="flex items-center gap-2 px-2 py-1.5">
 		<!-- Thumbnail or icon -->
 		<div
-			class="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded bg-muted"
+			class="bg-muted flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded"
 		>
 			{#if image.thumbnail}
 				<img
@@ -28,14 +28,14 @@
 					loading="lazy"
 				/>
 			{:else}
-				<FileImage class="h-5 w-5 text-muted-foreground" />
+				<FileImage class="text-muted-foreground h-5 w-5" />
 			{/if}
 		</div>
 
 		<!-- File info -->
 		<div class="flex-1 overflow-hidden">
 			<p class="truncate text-sm font-medium leading-tight">{image.filename}</p>
-			<div class="flex items-center gap-1 text-xs text-muted-foreground leading-none">
+			<div class="text-muted-foreground flex items-center gap-1 text-xs leading-none">
 				<span>{formatBytes(image.original_size)}</span>
 				<span>•</span>
 				<Badge variant="secondary" class="h-3 px-1 py-0 text-xs">{image.format}</Badge>

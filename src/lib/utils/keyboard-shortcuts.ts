@@ -40,7 +40,7 @@ export class KeyboardShortcutManager {
 	 */
 	activate(target: EventTarget = document) {
 		if (this.isActive) return;
-		
+
 		target.addEventListener('keydown', this.boundHandleKeyDown);
 		this.isActive = true;
 	}
@@ -50,7 +50,7 @@ export class KeyboardShortcutManager {
 	 */
 	deactivate(target: EventTarget = document) {
 		if (!this.isActive) return;
-		
+
 		target.removeEventListener('keydown', this.boundHandleKeyDown);
 		this.isActive = false;
 	}
@@ -62,11 +62,12 @@ export class KeyboardShortcutManager {
 		const keyboardEvent = event as KeyboardEvent;
 		// Skip if user is typing in an input/textarea
 		const target = event.target as HTMLElement;
-		if (target && (
-			target.tagName === 'INPUT' ||
-			target.tagName === 'TEXTAREA' ||
-			target.contentEditable === 'true'
-		)) {
+		if (
+			target &&
+			(target.tagName === 'INPUT' ||
+				target.tagName === 'TEXTAREA' ||
+				target.contentEditable === 'true')
+		) {
 			return;
 		}
 
@@ -99,14 +100,14 @@ export class KeyboardShortcutManager {
 	 */
 	getShortcutDescription(shortcut: KeyboardShortcut): string {
 		const parts: string[] = [];
-		
+
 		if (shortcut.ctrlKey) parts.push('Ctrl');
 		if (shortcut.metaKey) parts.push('Cmd');
 		if (shortcut.altKey) parts.push('Alt');
 		if (shortcut.shiftKey) parts.push('Shift');
-		
+
 		parts.push(shortcut.key.toUpperCase());
-		
+
 		return parts.join(' + ');
 	}
 
@@ -200,12 +201,12 @@ export function getModifierKey(): 'ctrlKey' | 'metaKey' {
  * Create platform-aware shortcut
  */
 export function createPlatformShortcut(
-	key: string, 
+	key: string,
 	handler: (event: KeyboardEvent) => void,
 	options: Omit<KeyboardShortcut, 'key' | 'handler' | 'ctrlKey' | 'metaKey'> = {}
 ): KeyboardShortcut {
 	const modifierKey = getModifierKey();
-	
+
 	return {
 		key,
 		[modifierKey]: true,

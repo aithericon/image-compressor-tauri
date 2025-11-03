@@ -1,10 +1,23 @@
 <script lang="ts">
-	import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '$lib/components/ui/card';
+	import {
+		Card,
+		CardHeader,
+		CardContent,
+		CardTitle,
+		CardDescription
+	} from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { Label } from '$lib/components/ui/label';
 	import { Slider } from '$lib/components/ui/slider';
 	import { Input } from '$lib/components/ui/input';
-	import { compressionState, getEstimatedBytesSaved, getEstimatedSavingsPercent, getTotalOriginalSize, getTotalEstimatedSize, saveSettings } from '$lib/stores/compression-state.svelte';
+	import {
+		compressionState,
+		getEstimatedBytesSaved,
+		getEstimatedSavingsPercent,
+		getTotalOriginalSize,
+		getTotalEstimatedSize,
+		saveSettings
+	} from '$lib/stores/compression-state.svelte';
 	import { formatBytes } from '$lib/utils/format';
 	import { selectFolder } from '$lib/utils/tauri-commands';
 	import { FolderOpen } from 'lucide-svelte';
@@ -56,14 +69,7 @@
 				<Label for="quality">{m.compression_settings_quality()}</Label>
 				<span class="text-sm font-medium">{qualityValue}%</span>
 			</div>
-			<Slider
-				type="single"
-				min={0}
-				max={100}
-				step={1}
-				bind:value={qualityValue}
-				class="w-full"
-			/>
+			<Slider type="single" min={0} max={100} step={1} bind:value={qualityValue} class="w-full" />
 		</div>
 
 		<!-- Size Ratio Slider -->
@@ -72,24 +78,18 @@
 				<Label for="sizeRatio">{m.compression_settings_size_ratio()}</Label>
 				<span class="text-sm font-medium">{sizeRatioValue}%</span>
 			</div>
-			<Slider
-				type="single"
-				min={0}
-				max={100}
-				step={1}
-				bind:value={sizeRatioValue}
-				class="w-full"
-			/>
+			<Slider type="single" min={0} max={100} step={1} bind:value={sizeRatioValue} class="w-full" />
 		</div>
 
 		<!-- Estimated Result -->
-		<div class="rounded-lg bg-muted p-4">
+		<div class="bg-muted rounded-lg p-4">
 			<p class="text-sm font-medium">{m.compression_settings_estimated_result()}</p>
 			<p class="mt-2 text-2xl font-bold">
 				{formatBytes(totalOriginalSize)} → {formatBytes(totalEstimatedSize)}
 			</p>
-			<p class="mt-1 text-sm text-muted-foreground">
-				{formatBytes(estimatedBytesSaved)} {m.compression_settings_saved()} ({estimatedSavingsPercent.toFixed(1)}%)
+			<p class="text-muted-foreground mt-1 text-sm">
+				{formatBytes(estimatedBytesSaved)}
+				{m.compression_settings_saved()} ({estimatedSavingsPercent.toFixed(1)}%)
 			</p>
 		</div>
 

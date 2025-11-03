@@ -4,7 +4,7 @@
 	import CalendarIcon from 'lucide-svelte/icons/calendar';
 	import ChevronLeftIcon from 'lucide-svelte/icons/chevron-left';
 	import ChevronRightIcon from 'lucide-svelte/icons/chevron-right';
-	
+
 	interface Props {
 		value: { from: Date; to: Date };
 		onValueChange?: (value: { from: Date; to: Date }) => void;
@@ -12,66 +12,72 @@
 		maxDate?: Date;
 		class?: string;
 	}
-	
-	let { value = $bindable(), onValueChange, minDate, maxDate, class: className = '' }: Props = $props();
-	
+
+	let {
+		value = $bindable(),
+		onValueChange,
+		minDate,
+		maxDate,
+		class: className = ''
+	}: Props = $props();
+
 	let isOpen = $state(false);
-	
+
 	// Date utility functions
 	function startOfDay(date: Date): Date {
 		const d = new Date(date);
 		d.setHours(0, 0, 0, 0);
 		return d;
 	}
-	
+
 	function endOfDay(date: Date): Date {
 		const d = new Date(date);
 		d.setHours(23, 59, 59, 999);
 		return d;
 	}
-	
+
 	function formatDateRange(from: Date, to: Date): string {
 		const formatOptions: Intl.DateTimeFormatOptions = {
 			month: 'short',
 			day: 'numeric',
 			year: from.getFullYear() !== to.getFullYear() ? 'numeric' : undefined
 		};
-		
+
 		const fromStr = from.toLocaleDateString('en-US', formatOptions);
 		const toStr = to.toLocaleDateString('en-US', { ...formatOptions, year: 'numeric' });
-		
+
 		return `${fromStr} - ${toStr}`;
 	}
-	
+
 	function shiftRange(direction: 'prev' | 'next') {
 		const diffMs = value.to.getTime() - value.from.getTime();
 		const shift = direction === 'prev' ? -diffMs : diffMs;
-		
+
 		let newFrom = new Date(value.from.getTime() + shift);
 		let newTo = new Date(value.to.getTime() + shift);
-		
+
 		// Clamp to bounds
 		if (minDate && newFrom < minDate) {
 			const overflow = minDate.getTime() - newFrom.getTime();
 			newFrom = new Date(minDate);
 			newTo = new Date(newTo.getTime() + overflow);
 		}
-		
+
 		if (maxDate && newTo > maxDate) {
 			const overflow = newTo.getTime() - maxDate.getTime();
 			newTo = new Date(maxDate);
 			newFrom = new Date(newFrom.getTime() - overflow);
 		}
-		
+
 		// Final safety check
 		if (minDate && newFrom < minDate) newFrom = new Date(minDate);
 		if (maxDate && newTo > maxDate) newTo = new Date(maxDate);
-		
+
 		const newValue = { from: newFrom, to: newTo };
 		value = newValue;
 		onValueChange?.(newValue);
 	}
-	
+
 	// Check if we can shift in a direction
 	function canShift(direction: 'prev' | 'next'): boolean {
 		if (direction === 'prev') {
@@ -80,12 +86,12 @@
 			return !maxDate || value.to < maxDate;
 		}
 	}
-	
+
 	// Format dates for input fields
 	function formatDateForInput(date: Date): string {
 		return date.toISOString().split('T')[0];
 	}
-	
+
 	// Format min/max dates for input fields
 	const minDateStr = $derived(minDate ? formatDateForInput(minDate) : '');
 	const maxDateStr = $derived(maxDate ? formatDateForInput(maxDate) : '');
@@ -101,9 +107,11 @@
 	>
 		<ChevronLeftIcon class="h-4 w-4" />
 	</Button>
-	
+
 	<Popover bind:open={isOpen}>
-		<PopoverTrigger class="inline-flex h-9 items-center justify-start whitespace-nowrap rounded-md border border-input bg-background px-3 text-sm font-normal ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 w-[260px] text-left">
+		<PopoverTrigger
+			class="border-input bg-background ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring inline-flex h-9 w-[260px] items-center justify-start whitespace-nowrap rounded-md border px-3 text-left text-sm font-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+		>
 			<CalendarIcon class="mr-2 h-4 w-4" />
 			{formatDateRange(value.from, value.to)}
 		</PopoverTrigger>
@@ -112,9 +120,7 @@
 				<div class="space-y-2">
 					<div class="text-sm font-medium">Date Range</div>
 					{#if minDate || maxDate}
-						<div class="text-xs text-muted-foreground">
-							Range limited to forecast period
-						</div>
+						<div class="text-muted-foreground text-xs">Range limited to forecast period</div>
 					{/if}
 					<div class="flex gap-2">
 						<input
@@ -129,7 +135,7 @@
 									onValueChange?.(value);
 								}
 							}}
-							class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+							class="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 						/>
 						<span class="flex items-center px-2">to</span>
 						<input
@@ -144,7 +150,7 @@
 									onValueChange?.(value);
 								}
 							}}
-							class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+							class="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 						/>
 					</div>
 					<Button
@@ -160,7 +166,7 @@
 			</div>
 		</PopoverContent>
 	</Popover>
-	
+
 	<Button
 		variant="ghost"
 		size="icon"

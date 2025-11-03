@@ -68,10 +68,10 @@
 		{#if compressionState.isAnalyzing}
 			<!-- Large analyzing animation -->
 			<div class="flex flex-col items-center justify-center space-y-6 py-12">
-				<Loader2 class="h-20 w-20 animate-spin text-primary" />
+				<Loader2 class="text-primary h-20 w-20 animate-spin" />
 				<div class="text-center">
 					<p class="text-xl font-semibold">{m.file_selector_analyzing_images()}</p>
-					<p class="mt-2 text-sm text-muted-foreground">Please wait while we analyze your images</p>
+					<p class="text-muted-foreground mt-2 text-sm">Please wait while we analyze your images</p>
 				</div>
 			</div>
 		{:else}
@@ -84,10 +84,10 @@
 				ondragleave={handleDragLeave}
 				ondrop={handleDrop}
 			>
-				<FileImage class="h-16 w-16 text-muted-foreground" />
+				<FileImage class="text-muted-foreground h-16 w-16" />
 				<div class="text-center">
 					<h3 class="text-lg font-semibold">{m.file_selector_drag_drop_title()}</h3>
-					<p class="text-sm text-muted-foreground">{m.file_selector_drag_drop_subtitle()}</p>
+					<p class="text-muted-foreground text-sm">{m.file_selector_drag_drop_subtitle()}</p>
 				</div>
 
 				<div class="flex gap-4">
@@ -95,7 +95,11 @@
 						<FileImage class="mr-2 h-4 w-4" />
 						{m.file_selector_select_files()}
 					</Button>
-					<Button onclick={handleFolderSelect} variant="outline" disabled={compressionState.isAnalyzing}>
+					<Button
+						onclick={handleFolderSelect}
+						variant="outline"
+						disabled={compressionState.isAnalyzing}
+					>
 						<FolderOpen class="mr-2 h-4 w-4" />
 						{m.file_selector_select_folder()}
 					</Button>

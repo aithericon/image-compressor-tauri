@@ -12,13 +12,15 @@
 				<div class="flex items-center justify-between text-sm">
 					<span class="font-medium">{m.progress_bar_compressing()}</span>
 					<span class="text-muted-foreground">
-						{compressionState.progress.current} {m.progress_bar_of()} {compressionState.progress.total}
+						{compressionState.progress.current}
+						{m.progress_bar_of()}
+						{compressionState.progress.total}
 					</span>
 				</div>
 				<Progress value={compressionState.progress.percent} class="h-2" />
 			</div>
 
-			<div class="text-sm text-muted-foreground">
+			<div class="text-muted-foreground text-sm">
 				<p>{m.progress_bar_processing()} {compressionState.progress.current_file}</p>
 			</div>
 		</CardContent>

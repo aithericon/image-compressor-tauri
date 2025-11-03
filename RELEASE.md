@@ -9,6 +9,7 @@ The project uses GitHub Actions to automatically build the application for multi
 ### Creating a New Release
 
 1. **Update Version Numbers:**
+
    ```bash
    # Update package.json version
    npm version patch  # or minor, or major
@@ -21,11 +22,13 @@ The project uses GitHub Actions to automatically build the application for multi
    ```
 
 2. **Create CHANGELOG Entry:**
+
    ```bash
    # Update CHANGELOG.md with changes in this version
    ```
 
 3. **Commit and Tag:**
+
    ```bash
    git add .
    git commit -m "Release v1.0.0"
@@ -105,6 +108,7 @@ npm run tauri:build
 ### Automated Testing
 
 Every push to `main` or `develop` triggers the test workflow:
+
 - TypeScript type checking
 - Linting
 - Frontend build
@@ -130,16 +134,19 @@ Before releasing, test on actual devices:
 ## Build Artifacts
 
 ### Windows
+
 - `.msi` - Windows Installer (recommended)
 - `.exe` - NSIS installer
 
 ### macOS
+
 - `.dmg` - Disk image with app (recommended)
 - `.app` - Application bundle
 
 ### File Naming Convention
 
 GitHub Actions generates files with this naming:
+
 - Windows: `Image-Compressor_1.0.0_x64_en-US.msi`
 - macOS (Intel): `Image-Compressor_1.0.0_x64.dmg`
 - macOS (Apple Silicon): `Image-Compressor_1.0.0_aarch64.dmg`
@@ -170,15 +177,18 @@ GitHub Actions generates files with this naming:
 ## Distribution Channels
 
 ### Direct Download
+
 - Upload releases to company website
 - Provide download links to customers
 
 ### Microsoft Store (Optional)
+
 - Requires additional configuration in `tauri.conf.json`
 - Need Microsoft Partner Center account
 - Automated updates available
 
 ### Mac App Store (Optional)
+
 - Requires additional code signing
 - Need Apple Developer Program membership
 - Automated updates available
@@ -186,11 +196,13 @@ GitHub Actions generates files with this naming:
 ## Version Numbering
 
 Follow [Semantic Versioning](https://semver.org/):
+
 - **MAJOR**: Breaking changes
 - **MINOR**: New features (backward compatible)
 - **PATCH**: Bug fixes
 
 Example: `v1.2.3`
+
 - 1 = Major version
 - 2 = Minor version
 - 3 = Patch version

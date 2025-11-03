@@ -11,16 +11,18 @@ All requested branding changes have been successfully implemented across the Ima
 **File:** `src/routes/+page.svelte`
 
 **Changes:**
+
 - Added Aithericon logo (`/logo.png`) to the top-left of the header
 - Logo is 32px height (h-8) with automatic width scaling
 - Logo appears next to the application title
 - Layout: `[Logo] [Title] ............... [Language Toggle] [Theme Toggle]`
 
 **Code:**
+
 ```svelte
 <div class="flex items-center gap-3">
-  <img src="/logo.png" alt="Aithericon Logo" class="h-8 w-auto" />
-  <h1 class="text-2xl font-bold">{m.app_title()}</h1>
+	<img src="/logo.png" alt="Aithericon Logo" class="h-8 w-auto" />
+	<h1 class="text-2xl font-bold">{m.app_title()}</h1>
 </div>
 ```
 
@@ -29,6 +31,7 @@ All requested branding changes have been successfully implemented across the Ima
 **File:** `src/routes/+page.svelte`
 
 **Changes:**
+
 - Added footer at the bottom of the page with company information
 - Contains: Copyright notice, website link, and support email
 - Uses `mt-auto` to ensure footer stays at the bottom
@@ -38,37 +41,37 @@ All requested branding changes have been successfully implemented across the Ima
 - Email link uses `mailto:` protocol
 
 **Code:**
+
 ```svelte
 <footer class="mt-auto border-t px-6 py-4">
-  <div class="flex items-center justify-between text-xs text-muted-foreground">
-    <div class="flex items-center gap-4">
-      <span>{m.footer_copyright()}</span>
-      <a
-        href="https://aithericon.eu"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="hover:text-foreground transition-colors"
-      >
-        {m.footer_website()}
-      </a>
-      <a
-        href="mailto:support@aithericon.eu"
-        class="hover:text-foreground transition-colors"
-      >
-        {m.footer_support()}
-      </a>
-    </div>
-  </div>
+	<div class="text-muted-foreground flex items-center justify-between text-xs">
+		<div class="flex items-center gap-4">
+			<span>{m.footer_copyright()}</span>
+			<a
+				href="https://aithericon.eu"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="hover:text-foreground transition-colors"
+			>
+				{m.footer_website()}
+			</a>
+			<a href="mailto:support@aithericon.eu" class="hover:text-foreground transition-colors">
+				{m.footer_support()}
+			</a>
+		</div>
+	</div>
 </footer>
 ```
 
 ### 3. Internationalization Support (✅ Complete)
 
 **Files:**
+
 - `messages/en.json`
 - `messages/de.json`
 
 **Changes:**
+
 - Added translation keys for footer content
 - Both English and German translations provided
 - Keys added:
@@ -81,6 +84,7 @@ All requested branding changes have been successfully implemented across the Ima
 **File:** `src/app.html`
 
 **Changes:**
+
 - Updated page title: "Image Compressor - Aithericon GmbH"
 - Added meta description: "Professional image compression tool by Aithericon GmbH"
 - Set favicon to company logo: `<link rel="icon" href="%sveltekit.assets%/logo.png" />`
@@ -90,6 +94,7 @@ All requested branding changes have been successfully implemented across the Ima
 **File:** `src-tauri/tauri.conf.json`
 
 **Changes:**
+
 - Updated `productName`: "Image Compressor - Aithericon"
 - Updated `identifier`: "eu.aithericon.imagecompressor" (follows reverse domain notation)
 - Updated window title: "Image Compressor - Aithericon GmbH"
@@ -114,6 +119,7 @@ All requested branding changes have been successfully implemented across the Ima
 ## Dark Mode Compatibility
 
 All changes are fully compatible with both light and dark themes:
+
 - Logo has transparent background (verified at `/static/logo.png`)
 - Footer text uses `text-muted-foreground` which automatically adjusts
 - Hover effects use `hover:text-foreground` which respects theme
@@ -145,6 +151,7 @@ All links have been tested and work correctly:
 ## Responsive Behavior
 
 The layout maintains proper appearance across different window sizes:
+
 - Header items properly space with flexbox
 - Footer text remains readable at small sizes
 - Logo scales appropriately (h-8 w-auto)
@@ -171,6 +178,7 @@ If desired, consider adding:
 5. **Success Notifications**: Include logo in success/completion messages
 
 All changes follow best practices for:
+
 - Accessibility (proper alt text, semantic HTML)
 - Security (noopener noreferrer for external links)
 - Internationalization (translation keys for all text)

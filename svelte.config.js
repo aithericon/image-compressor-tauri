@@ -7,12 +7,12 @@ const config = {
 	// Consult https://svelte.dev/docs/kit/integrations
 	// for more information about preprocessors
 	preprocess: [vitePreprocess(), mdsvex()],
-	kit: { 
+	kit: {
 		adapter: adapter({
 			// SPA mode configuration
 			fallback: 'index.html',
 			strict: false
-		}) 
+		})
 	},
 	extensions: ['.svelte', '.svx']
 };

@@ -20,6 +20,7 @@
 ## 1. Technology Stack
 
 ### Core Technologies
+
 - **Framework**: SvelteKit with Svelte 5 (runes)
 - **Desktop Runtime**: Tauri v2
 - **Language**: TypeScript (frontend) + Rust (backend)
@@ -28,6 +29,7 @@
 - **Image Processing**: `image_compressor` (Rust crate)
 
 ### Key Libraries
+
 - **Backend**:
   - `image_compressor` - Core compression library
   - `tokio` - Async runtime
@@ -62,6 +64,7 @@ tauri-plugin-shell = "2.0"
 ### 2.2 Core Tauri Commands
 
 #### File/Folder Selection
+
 - **`select_folder()`** → `Option<String>`
   - Opens folder picker dialog
   - Returns selected folder path
@@ -76,6 +79,7 @@ tauri-plugin-shell = "2.0"
   - Cross-platform implementation
 
 #### Compression Operations
+
 - **`compress_images(config: CompressionConfig)`** → `Result<CompressResult, String>`
   - Main compression function
   - Inputs: source paths, output folder, quality (0-100), size ratio (0-1)
@@ -88,6 +92,7 @@ tauri-plugin-shell = "2.0"
   - Calculates estimated compressed sizes based on typical ratios
 
 #### Utility Commands
+
 - **`get_default_output_folder()`** → `String`
   - Returns platform-specific default path
   - Windows: `%USERPROFILE%/Documents/CompressedImages`
@@ -159,6 +164,7 @@ pub struct PathValidation {
 ### 2.4 Event System
 
 **Emit Events:**
+
 - `compression:progress` - Emitted during batch processing
   - Payload: `ProgressUpdate`
   - Frequency: Per image processed
@@ -167,12 +173,13 @@ pub struct PathValidation {
   - Payload: `CompressResult`
 
 **Listen in Frontend:**
+
 ```typescript
 import { listen } from '@tauri-apps/api/event';
 
 const unlisten = await listen('compression:progress', (event) => {
-  const progress = event.payload as ProgressUpdate;
-  // Update UI
+	const progress = event.payload as ProgressUpdate;
+	// Update UI
 });
 ```
 
@@ -223,6 +230,7 @@ Remove existing dashboard/settings structure - keep it simple.
 ### 3.2 Core Components
 
 #### File Management
+
 1. **`FileSelector.svelte`**
    - Drag-and-drop zone with visual feedback
    - File picker button (select multiple files)
@@ -244,6 +252,7 @@ Remove existing dashboard/settings structure - keep it simple.
    - Remove button
 
 #### Compression Controls
+
 4. **`CompressionSettings.svelte`**
    - Quality slider (0-100) with live value display
    - Size ratio slider (0-1) with percentage display
@@ -257,6 +266,7 @@ Remove existing dashboard/settings structure - keep it simple.
    - Disabled when no images selected
 
 #### Progress & Results
+
 6. **`ProgressBar.svelte`**
    - Linear progress indicator
    - Percentage display
@@ -282,48 +292,46 @@ Create `src/lib/stores/compression-state.svelte.ts`:
 
 ```typescript
 import type {
-  ImageInfo,
-  CompressResult,
-  ProgressUpdate,
-  CompressionConfig
+	ImageInfo,
+	CompressResult,
+	ProgressUpdate,
+	CompressionConfig
 } from '$lib/types/compression';
 
 export const compressionState = $state({
-  // File selection
-  selectedImages: [] as ImageInfo[],
-  totalSize: 0,
+	// File selection
+	selectedImages: [] as ImageInfo[],
+	totalSize: 0,
 
-  // Processing states
-  isAnalyzing: false,
-  isCompressing: false,
+	// Processing states
+	isAnalyzing: false,
+	isCompressing: false,
 
-  // Progress tracking
-  progress: null as ProgressUpdate | null,
+	// Progress tracking
+	progress: null as ProgressUpdate | null,
 
-  // Results
-  result: null as CompressResult | null,
+	// Results
+	result: null as CompressResult | null,
 
-  // Settings
-  settings: {
-    quality: 85,
-    sizeRatio: 0.8,
-    outputFolder: '',
-    threadCount: 4,
-    preserveStructure: false,
-  } as CompressionConfig,
+	// Settings
+	settings: {
+		quality: 85,
+		sizeRatio: 0.8,
+		outputFolder: '',
+		threadCount: 4,
+		preserveStructure: false
+	} as CompressionConfig,
 
-  // UI state
-  showResults: false,
-  estimatedSavings: 0,
+	// UI state
+	showResults: false,
+	estimatedSavings: 0
 });
 
 // Computed values
 export const selectedCount = $derived(compressionState.selectedImages.length);
 export const hasSelection = $derived(selectedCount > 0);
 export const canCompress = $derived(
-  hasSelection &&
-  !compressionState.isCompressing &&
-  compressionState.settings.outputFolder !== ''
+	hasSelection && !compressionState.isCompressing && compressionState.settings.outputFolder !== ''
 );
 ```
 
@@ -335,50 +343,50 @@ Create `src/lib/types/compression.ts`:
 // Mirror Rust types for frontend use
 
 export interface CompressionConfig {
-  source_paths: string[];
-  output_folder: string;
-  quality: number;        // 0-100
-  size_ratio: number;     // 0-1
-  thread_count: number;
-  preserve_structure: boolean;
+	source_paths: string[];
+	output_folder: string;
+	quality: number; // 0-100
+	size_ratio: number; // 0-1
+	thread_count: number;
+	preserve_structure: boolean;
 }
 
 export interface ImageInfo {
-  path: string;
-  filename: string;
-  original_size: number;
-  estimated_size: number;
-  format: string;
-  width: number;
-  height: number;
+	path: string;
+	filename: string;
+	original_size: number;
+	estimated_size: number;
+	format: string;
+	width: number;
+	height: number;
 }
 
 export interface CompressResult {
-  total: number;
-  successful: number;
-  failed: number;
-  saved_bytes: number;
-  errors: ImageError[];
-  duration_ms: number;
+	total: number;
+	successful: number;
+	failed: number;
+	saved_bytes: number;
+	errors: ImageError[];
+	duration_ms: number;
 }
 
 export interface ImageError {
-  path: string;
-  filename: string;
-  error: string;
+	path: string;
+	filename: string;
+	error: string;
 }
 
 export interface ProgressUpdate {
-  current: number;
-  total: number;
-  current_file: string;
-  percent: number;
+	current: number;
+	total: number;
+	current_file: string;
+	percent: number;
 }
 
 export interface PathValidation {
-  path: string;
-  is_valid: boolean;
-  error?: string;
+	path: string;
+	is_valid: boolean;
+	error?: string;
 }
 ```
 
@@ -391,47 +399,47 @@ Create `src/lib/utils/format.ts`:
  * Format bytes to human-readable size
  */
 export function formatBytes(bytes: number, decimals = 2): string {
-  if (bytes === 0) return '0 Bytes';
+	if (bytes === 0) return '0 Bytes';
 
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
+	const k = 1024;
+	const dm = decimals < 0 ? 0 : decimals;
+	const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+	const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+	return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
 /**
  * Format duration in milliseconds to readable string
  */
 export function formatDuration(ms: number): string {
-  if (ms < 1000) return `${ms}ms`;
-  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
-  const minutes = Math.floor(ms / 60000);
-  const seconds = ((ms % 60000) / 1000).toFixed(0);
-  return `${minutes}m ${seconds}s`;
+	if (ms < 1000) return `${ms}ms`;
+	if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+	const minutes = Math.floor(ms / 60000);
+	const seconds = ((ms % 60000) / 1000).toFixed(0);
+	return `${minutes}m ${seconds}s`;
 }
 
 /**
  * Calculate percentage savings
  */
 export function calculateSavings(original: number, compressed: number): number {
-  if (original === 0) return 0;
-  return ((original - compressed) / original) * 100;
+	if (original === 0) return 0;
+	return ((original - compressed) / original) * 100;
 }
 
 /**
  * Estimate compressed size based on quality and size ratio
  */
 export function estimateCompressedSize(
-  originalSize: number,
-  quality: number,
-  sizeRatio: number
+	originalSize: number,
+	quality: number,
+	sizeRatio: number
 ): number {
-  // Rough estimation formula
-  const qualityFactor = quality / 100;
-  const baseFactor = 0.3 + (qualityFactor * 0.4);
-  return Math.floor(originalSize * baseFactor * sizeRatio);
+	// Rough estimation formula
+	const qualityFactor = quality / 100;
+	const baseFactor = 0.3 + qualityFactor * 0.4;
+	return Math.floor(originalSize * baseFactor * sizeRatio);
 }
 ```
 
@@ -440,38 +448,38 @@ Create `src/lib/utils/tauri-commands.ts`:
 ```typescript
 import { invoke } from '@tauri-apps/api/core';
 import type {
-  CompressionConfig,
-  ImageInfo,
-  CompressResult,
-  PathValidation
+	CompressionConfig,
+	ImageInfo,
+	CompressResult,
+	PathValidation
 } from '$lib/types/compression';
 
 export async function selectFolder(): Promise<string | null> {
-  return await invoke<string | null>('select_folder');
+	return await invoke<string | null>('select_folder');
 }
 
 export async function selectFiles(): Promise<string[]> {
-  return await invoke<string[]>('select_files');
+	return await invoke<string[]>('select_files');
 }
 
 export async function analyzeImages(paths: string[]): Promise<ImageInfo[]> {
-  return await invoke<ImageInfo[]>('analyze_images', { paths });
+	return await invoke<ImageInfo[]>('analyze_images', { paths });
 }
 
 export async function compressImages(config: CompressionConfig): Promise<CompressResult> {
-  return await invoke<CompressResult>('compress_images', { config });
+	return await invoke<CompressResult>('compress_images', { config });
 }
 
 export async function openInExplorer(path: string): Promise<void> {
-  await invoke('open_in_explorer', { path });
+	await invoke('open_in_explorer', { path });
 }
 
 export async function getDefaultOutputFolder(): Promise<string> {
-  return await invoke<string>('get_default_output_folder');
+	return await invoke<string>('get_default_output_folder');
 }
 
 export async function validatePaths(paths: string[]): Promise<PathValidation[]> {
-  return await invoke<PathValidation[]>('validate_paths', { paths });
+	return await invoke<PathValidation[]>('validate_paths', { paths });
 }
 ```
 
@@ -606,6 +614,7 @@ Use existing TailwindCSS + shadcn-svelte theme system:
 **Goal:** Set up Rust backend with compression capabilities
 
 #### Tasks:
+
 1. **Update Cargo.toml**
    - Add all required dependencies
    - Configure feature flags
@@ -637,6 +646,7 @@ Use existing TailwindCSS + shadcn-svelte theme system:
    - Test with various image formats
 
 **Deliverables:**
+
 - ✅ Working Rust compression backend
 - ✅ All Tauri commands implemented
 - ✅ Progress events emitting correctly
@@ -649,6 +659,7 @@ Use existing TailwindCSS + shadcn-svelte theme system:
 **Goal:** Set up frontend structure and state management
 
 #### Tasks:
+
 1. **Simplify layout**
    - Remove existing dashboard/settings pages
    - Clean up sidebar navigation
@@ -674,6 +685,7 @@ Use existing TailwindCSS + shadcn-svelte theme system:
    - Update state accordingly
 
 **Deliverables:**
+
 - ✅ Clean single-page layout
 - ✅ Type-safe Tauri command wrappers
 - ✅ State management working
@@ -686,6 +698,7 @@ Use existing TailwindCSS + shadcn-svelte theme system:
 **Goal:** Build all user interface components
 
 #### Tasks:
+
 1. **FileSelector component** (Day 1)
    - Drag-and-drop zone with visual states
    - File picker button integration
@@ -725,6 +738,7 @@ Use existing TailwindCSS + shadcn-svelte theme system:
    - Accessibility (keyboard nav, ARIA labels)
 
 **Deliverables:**
+
 - ✅ All 8 components built and styled
 - ✅ Components integrated with shadcn-svelte
 - ✅ Dark mode support
@@ -737,6 +751,7 @@ Use existing TailwindCSS + shadcn-svelte theme system:
 **Goal:** Connect frontend and backend, implement full workflow
 
 #### Tasks:
+
 1. **Implement file selection flow**
    - Connect FileSelector to Tauri commands
    - Call analyze_images on selection
@@ -771,6 +786,7 @@ Use existing TailwindCSS + shadcn-svelte theme system:
    - Test edge cases (empty folder, large files)
 
 **Deliverables:**
+
 - ✅ Full workflow working end-to-end
 - ✅ Settings persist across sessions
 - ✅ Error handling comprehensive
@@ -783,6 +799,7 @@ Use existing TailwindCSS + shadcn-svelte theme system:
 **Goal:** Enhance UX and add quality-of-life features
 
 #### Tasks:
+
 1. **Drag-and-drop enhancements**
    - Prevent default browser file opening
    - Visual feedback on drag-over
@@ -824,6 +841,7 @@ Use existing TailwindCSS + shadcn-svelte theme system:
    - Create user guide (optional)
 
 **Deliverables:**
+
 - ✅ Polished user experience
 - ✅ Keyboard shortcuts working
 - ✅ Performance optimized
@@ -836,6 +854,7 @@ Use existing TailwindCSS + shadcn-svelte theme system:
 **Goal:** Ensure reliability and performance
 
 #### Tasks:
+
 1. **Unit tests (Vitest)**
    - Test format utilities
    - Test state management
@@ -873,6 +892,7 @@ Use existing TailwindCSS + shadcn-svelte theme system:
    - Refactor as needed
 
 **Deliverables:**
+
 - ✅ Comprehensive test suite
 - ✅ E2E tests passing
 - ✅ Performance benchmarks met
@@ -885,6 +905,7 @@ Use existing TailwindCSS + shadcn-svelte theme system:
 ### 6.1 Image Preview Strategy
 
 **Option A: Server-side thumbnails (Recommended)**
+
 - Generate thumbnails in Rust using `image` crate
 - Resize to 100x100 or 150x150
 - Convert to base64
@@ -893,6 +914,7 @@ Use existing TailwindCSS + shadcn-svelte theme system:
 - **Cons:** Memory overhead for large batches
 
 **Option B: File protocol**
+
 - Use `file://` protocol with img tags
 - **Pros:** Zero processing overhead
 - **Cons:** Security restrictions, Tauri CSP issues
@@ -904,11 +926,13 @@ Use existing TailwindCSS + shadcn-svelte theme system:
 **Default:** `num_cpus::get()` (number of logical cores)
 
 **Recommendations:**
+
 - Desktop (4+ cores): Use all cores
 - Laptop (2-4 cores): Use cores - 1 (leave one for UI)
 - Allow user override in advanced settings
 
 **Implementation:**
+
 ```rust
 let default_threads = std::thread::available_parallelism()
     .map(|n| n.get())
@@ -918,16 +942,19 @@ let default_threads = std::thread::available_parallelism()
 ### 6.3 Output Folder Strategy
 
 **Default Paths:**
+
 - Windows: `%USERPROFILE%\Documents\CompressedImages`
 - macOS: `~/Documents/CompressedImages`
 - Linux: `~/Documents/CompressedImages`
 
 **Options:**
+
 1. **Separate folder (default):** All compressed images in one location
 2. **Alongside originals:** Save next to source with `_compressed` suffix
 3. **Preserve structure:** Maintain folder hierarchy in output folder
 
 **Implementation:**
+
 ```rust
 use tauri::api::path::document_dir;
 
@@ -941,12 +968,14 @@ fn get_default_output() -> PathBuf {
 ### 6.4 File Naming Strategy
 
 **Conflict Resolution:**
+
 1. Keep original name (default)
 2. If exists: append `_1`, `_2`, etc.
 3. Option: Add timestamp prefix `20240315_120530_image.jpg`
 4. Always change extension to `.jpg`
 
 **Implementation:**
+
 ```rust
 fn get_unique_filename(output_dir: &Path, base_name: &str) -> PathBuf {
     let mut counter = 1;
@@ -964,6 +993,7 @@ fn get_unique_filename(output_dir: &Path, base_name: &str) -> PathBuf {
 ### 6.5 Progress Tracking Implementation
 
 **Rust Side:**
+
 ```rust
 use tokio::sync::mpsc;
 use tauri::Manager;
@@ -999,23 +1029,26 @@ async fn compress_batch(
 ```
 
 **Frontend Side:**
+
 ```typescript
 import { listen } from '@tauri-apps/api/event';
 
 const unlisten = await listen<ProgressUpdate>('compression:progress', (event) => {
-  compressionState.progress = event.payload;
+	compressionState.progress = event.payload;
 });
 ```
 
 ### 6.6 Error Recovery Strategy
 
 **Principles:**
+
 1. **Continue on failure:** Don't stop entire batch if one image fails
 2. **Collect errors:** Store all errors and display at end
 3. **Provide details:** Include filename and specific error message
 4. **Allow retry:** User can retry failed images only
 
 **Implementation:**
+
 ```rust
 let mut errors = Vec::new();
 let mut successful = 0;
@@ -1043,11 +1076,13 @@ CompressResult {
 ### 6.7 Memory Management
 
 **Concerns:**
+
 - Large image files (50+ MB)
 - Large batches (1000+ images)
 - Thumbnail generation
 
 **Strategies:**
+
 1. **Stream processing:** Don't load all images into memory
 2. **Lazy thumbnails:** Generate only when needed
 3. **Limit concurrent:** Process N images at a time (thread pool)
@@ -1056,17 +1091,20 @@ CompressResult {
 ### 6.8 Validation & Security
 
 **Input Validation:**
+
 - Verify file extensions before processing
 - Check file magic numbers (not just extension)
 - Limit file size (optional, e.g., max 100 MB)
 - Validate output paths (no directory traversal)
 
 **Security:**
+
 - Use Tauri's path API for safe path handling
 - Don't execute user-provided paths as commands
 - Sanitize filenames (remove special chars on Windows)
 
 **Implementation:**
+
 ```rust
 fn is_valid_image(path: &Path) -> bool {
     // Check extension
@@ -1169,6 +1207,7 @@ img-compress/
 ### 7.2 Key Files to Create
 
 **Backend:**
+
 1. `src-tauri/src/compression/mod.rs`
 2. `src-tauri/src/compression/analyzer.rs`
 3. `src-tauri/src/compression/processor.rs`
@@ -1177,6 +1216,7 @@ img-compress/
 6. `src-tauri/src/commands/compress.rs`
 
 **Frontend:**
+
 1. `src/lib/types/compression.ts`
 2. `src/lib/stores/compression-state.svelte.ts`
 3. `src/lib/utils/format.ts`
@@ -1198,6 +1238,7 @@ img-compress/
 ### 8.1 Backend Tests (Rust)
 
 **Unit Tests:**
+
 ```rust
 #[cfg(test)]
 mod tests {
@@ -1219,6 +1260,7 @@ mod tests {
 ```
 
 **Integration Tests:**
+
 ```rust
 #[tokio::test]
 async fn test_compress_single_image() {
@@ -1236,46 +1278,48 @@ async fn test_compress_single_image() {
 ### 8.2 Frontend Tests
 
 **Unit Tests (Vitest):**
+
 ```typescript
 // tests/unit/format.test.ts
 import { describe, it, expect } from 'vitest';
 import { formatBytes, calculateSavings } from '$lib/utils/format';
 
 describe('formatBytes', () => {
-  it('formats bytes correctly', () => {
-    expect(formatBytes(0)).toBe('0 Bytes');
-    expect(formatBytes(1024)).toBe('1 KB');
-    expect(formatBytes(1048576)).toBe('1 MB');
-  });
+	it('formats bytes correctly', () => {
+		expect(formatBytes(0)).toBe('0 Bytes');
+		expect(formatBytes(1024)).toBe('1 KB');
+		expect(formatBytes(1048576)).toBe('1 MB');
+	});
 });
 
 describe('calculateSavings', () => {
-  it('calculates percentage correctly', () => {
-    expect(calculateSavings(100, 50)).toBe(50);
-    expect(calculateSavings(200, 100)).toBe(50);
-  });
+	it('calculates percentage correctly', () => {
+		expect(calculateSavings(100, 50)).toBe(50);
+		expect(calculateSavings(200, 100)).toBe(50);
+	});
 });
 ```
 
 **Component Tests:**
+
 ```typescript
 // tests/unit/ImageCard.test.ts
 import { render } from '@testing-library/svelte';
 import ImageCard from '$lib/components/ImageCard.svelte';
 
 it('renders image info correctly', () => {
-  const { getByText } = render(ImageCard, {
-    props: {
-      image: {
-        filename: 'test.png',
-        original_size: 1024000,
-        format: 'PNG',
-      }
-    }
-  });
+	const { getByText } = render(ImageCard, {
+		props: {
+			image: {
+				filename: 'test.png',
+				original_size: 1024000,
+				format: 'PNG'
+			}
+		}
+	});
 
-  expect(getByText('test.png')).toBeInTheDocument();
-  expect(getByText('1 MB')).toBeInTheDocument();
+	expect(getByText('test.png')).toBeInTheDocument();
+	expect(getByText('1 MB')).toBeInTheDocument();
 });
 ```
 
@@ -1286,32 +1330,33 @@ it('renders image info correctly', () => {
 import { test, expect } from '@playwright/test';
 
 test('complete compression workflow', async ({ page }) => {
-  await page.goto('/');
+	await page.goto('/');
 
-  // Select files
-  await page.click('text=Select Files');
-  // (Mock file selection in Tauri)
+	// Select files
+	await page.click('text=Select Files');
+	// (Mock file selection in Tauri)
 
-  // Verify images loaded
-  await expect(page.locator('text=Selected Images')).toBeVisible();
+	// Verify images loaded
+	await expect(page.locator('text=Selected Images')).toBeVisible();
 
-  // Adjust settings
-  await page.locator('input[type="range"]').first().fill('85');
+	// Adjust settings
+	await page.locator('input[type="range"]').first().fill('85');
 
-  // Start compression
-  await page.click('text=Compress Images');
+	// Start compression
+	await page.click('text=Compress Images');
 
-  // Wait for completion
-  await expect(page.locator('text=Compression Complete')).toBeVisible();
+	// Wait for completion
+	await expect(page.locator('text=Compression Complete')).toBeVisible();
 
-  // Verify results
-  await expect(page.locator('text=Successfully compressed')).toBeVisible();
+	// Verify results
+	await expect(page.locator('text=Successfully compressed')).toBeVisible();
 });
 ```
 
 ### 8.4 Performance Tests
 
 **Benchmarks:**
+
 ```rust
 #[bench]
 fn bench_compress_1000_images(b: &mut Bencher) {
@@ -1322,6 +1367,7 @@ fn bench_compress_1000_images(b: &mut Bencher) {
 ```
 
 **Load Tests:**
+
 - Test with 10, 100, 1000, 10000 images
 - Measure time and memory usage
 - Ensure UI remains responsive
@@ -1330,6 +1376,7 @@ fn bench_compress_1000_images(b: &mut Bencher) {
 ### 8.5 Manual Testing Checklist
 
 **File Selection:**
+
 - [ ] Drag and drop single file
 - [ ] Drag and drop multiple files
 - [ ] Drag and drop folder
@@ -1339,6 +1386,7 @@ fn bench_compress_1000_images(b: &mut Bencher) {
 - [ ] Empty folder
 
 **Compression:**
+
 - [ ] Compress single image
 - [ ] Compress multiple images
 - [ ] Compress large batch (100+)
@@ -1348,6 +1396,7 @@ fn bench_compress_1000_images(b: &mut Bencher) {
 - [ ] Custom output folder
 
 **Results:**
+
 - [ ] Success message displays
 - [ ] Statistics accurate
 - [ ] Open in Explorer works
@@ -1355,6 +1404,7 @@ fn bench_compress_1000_images(b: &mut Bencher) {
 - [ ] Error display works
 
 **Edge Cases:**
+
 - [ ] No images selected
 - [ ] Insufficient disk space
 - [ ] Invalid output path
@@ -1367,6 +1417,7 @@ fn bench_compress_1000_images(b: &mut Bencher) {
 - [ ] Network drive paths
 
 **Cross-Platform:**
+
 - [ ] Windows 10
 - [ ] Windows 11
 - [ ] macOS (if applicable)
@@ -1379,58 +1430,62 @@ fn bench_compress_1000_images(b: &mut Bencher) {
 ### 9.1 Build Configuration
 
 **Update `tauri.conf.json`:**
+
 ```json
 {
-  "productName": "Image Compressor",
-  "version": "1.0.0",
-  "identifier": "com.imagecompressor.app",
-  "build": {
-    "frontendDist": "../build",
-    "devUrl": "http://localhost:5173"
-  },
-  "app": {
-    "windows": [
-      {
-        "title": "Image Compressor",
-        "width": 900,
-        "height": 700,
-        "minWidth": 700,
-        "minHeight": 500,
-        "resizable": true
-      }
-    ]
-  },
-  "bundle": {
-    "active": true,
-    "targets": ["nsis", "msi"],
-    "windows": {
-      "wix": {
-        "language": "en-US"
-      },
-      "nsis": {
-        "installerIcon": "icons/icon.ico",
-        "installMode": "perUser",
-        "languages": ["en-US"],
-        "displayLanguageSelector": false
-      }
-    }
-  }
+	"productName": "Image Compressor",
+	"version": "1.0.0",
+	"identifier": "com.imagecompressor.app",
+	"build": {
+		"frontendDist": "../build",
+		"devUrl": "http://localhost:5173"
+	},
+	"app": {
+		"windows": [
+			{
+				"title": "Image Compressor",
+				"width": 900,
+				"height": 700,
+				"minWidth": 700,
+				"minHeight": 500,
+				"resizable": true
+			}
+		]
+	},
+	"bundle": {
+		"active": true,
+		"targets": ["nsis", "msi"],
+		"windows": {
+			"wix": {
+				"language": "en-US"
+			},
+			"nsis": {
+				"installerIcon": "icons/icon.ico",
+				"installMode": "perUser",
+				"languages": ["en-US"],
+				"displayLanguageSelector": false
+			}
+		}
+	}
 }
 ```
 
 ### 9.2 Build Commands
 
 **Development Build:**
+
 ```bash
 npm run tauri:dev
 ```
 
 **Production Build:**
+
 ```bash
 npm run tauri:build
 ```
 
 **Output Locations:**
+
 - **NSIS Installer:** `src-tauri/target/release/bundle/nsis/ImageCompressor_1.0.0_x64-setup.exe`
 - **MSI Installer:** `src-tauri/target/release/bundle/msi/ImageCompressor_1.0.0_x64_en-US.msi`
 - **Portable:** `src-tauri/target/release/ImageCompressor.exe`
@@ -1438,22 +1493,24 @@ npm run tauri:build
 ### 9.3 Code Signing (Windows)
 
 **Why:**
+
 - Prevents "Unknown Publisher" warnings
 - Increases user trust
 - Required for some enterprise environments
 
 **Steps:**
+
 1. Obtain code signing certificate (DigiCert, Sectigo, etc.)
 2. Configure in `tauri.conf.json`:
    ```json
    {
-     "bundle": {
-       "windows": {
-         "certificateThumbprint": "YOUR_CERT_THUMBPRINT",
-         "digestAlgorithm": "sha256",
-         "timestampUrl": "http://timestamp.digicert.com"
-       }
-     }
+   	"bundle": {
+   		"windows": {
+   			"certificateThumbprint": "YOUR_CERT_THUMBPRINT",
+   			"digestAlgorithm": "sha256",
+   			"timestampUrl": "http://timestamp.digicert.com"
+   		}
+   	}
    }
    ```
 
@@ -1462,21 +1519,25 @@ npm run tauri:build
 ### 9.4 Distribution Methods
 
 **Option 1: GitHub Releases (Recommended)**
+
 - Upload installers to GitHub Releases
 - Automatic download statistics
 - Free hosting
 - Version tracking
 
 **Option 2: Direct Download**
+
 - Host on personal website
 - Provide direct download links
 
 **Option 3: Microsoft Store**
+
 - Wider reach
 - Automatic updates
 - $19 one-time fee for developer account
 
 **Option 4: Auto-Updates**
+
 - Use tauri-plugin-updater
 - Host update manifest on GitHub
 - In-app update notifications
@@ -1500,30 +1561,35 @@ npm run tauri:build
 ### 10.1 Phase 2 Features (Post-MVP)
 
 **Output Format Options:**
+
 - Keep original format
 - Convert to PNG
 - Convert to WebP
 - User selectable per batch
 
 **Compression Presets:**
+
 - Web (high compression, 70% quality)
 - Mobile (medium, 80% quality)
 - Print (low compression, 95% quality)
 - Custom presets saved by user
 
 **Image Editing:**
+
 - Resize to specific dimensions
 - Crop to aspect ratio
 - Rotate/flip
 - Apply filters (grayscale, brightness, contrast)
 
 **EXIF Metadata:**
+
 - Preserve EXIF data option
 - Strip metadata option
 - View metadata in UI
 - Bulk edit metadata
 
 **Advanced Features:**
+
 - Before/after preview slider
 - Watermarking (text or image)
 - Batch rename
@@ -1533,25 +1599,30 @@ npm run tauri:build
 ### 10.2 Phase 3 Features (Future)
 
 **Statistics Dashboard:**
+
 - Total images compressed
 - Total space saved
 - Most used settings
 - Charts and graphs
 
 **Cloud Integration:**
+
 - Upload to Google Drive
 - Upload to Dropbox
 - Direct share links
 
 **Collaboration:**
+
 - Share compression settings
 - Preset library (community)
 
 **Performance:**
+
 - GPU acceleration (if feasible)
 - Distributed processing (use multiple machines)
 
 **Platform Support:**
+
 - macOS native build
 - Linux native build
 - Mobile app (iOS/Android)
@@ -1560,21 +1631,22 @@ npm run tauri:build
 
 ## 11. Timeline Summary
 
-| Phase | Duration | Key Deliverables |
-|-------|----------|-----------------|
-| Phase 1: Backend Foundation | 2-3 days | Rust compression module, Tauri commands |
-| Phase 2: Frontend Core | 1-2 days | State management, types, utilities |
-| Phase 3: UI Components | 3-4 days | All 8 UI components built and styled |
-| Phase 4: Integration | 1-2 days | Full workflow connected |
-| Phase 5: Polish | 2-3 days | UX enhancements, keyboard shortcuts |
-| Phase 6: Testing | 2-3 days | Unit, E2E, performance tests |
-| **Total** | **11-17 days** | **Production-ready MVP** |
+| Phase                       | Duration       | Key Deliverables                        |
+| --------------------------- | -------------- | --------------------------------------- |
+| Phase 1: Backend Foundation | 2-3 days       | Rust compression module, Tauri commands |
+| Phase 2: Frontend Core      | 1-2 days       | State management, types, utilities      |
+| Phase 3: UI Components      | 3-4 days       | All 8 UI components built and styled    |
+| Phase 4: Integration        | 1-2 days       | Full workflow connected                 |
+| Phase 5: Polish             | 2-3 days       | UX enhancements, keyboard shortcuts     |
+| Phase 6: Testing            | 2-3 days       | Unit, E2E, performance tests            |
+| **Total**                   | **11-17 days** | **Production-ready MVP**                |
 
 ---
 
 ## 12. Success Metrics
 
 **MVP Definition of Done:**
+
 - [ ] User can select images via drag-drop, file picker, or folder picker
 - [ ] User can adjust quality and size ratio
 - [ ] User can compress images to JPG format
@@ -1588,12 +1660,14 @@ npm run tauri:build
 - [ ] No critical bugs
 
 **Performance Targets:**
+
 - Compress 100 images in <30 seconds (on average hardware)
 - UI remains responsive during processing
 - Startup time <3 seconds
 - Memory usage <500 MB for typical batches
 
 **Quality Targets:**
+
 - No crashes during normal usage
 - All user-facing text is clear and helpful
 - Dark mode works correctly
@@ -1605,6 +1679,7 @@ npm run tauri:build
 ## Appendix A: Dependencies Reference
 
 ### Backend Dependencies
+
 ```toml
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
@@ -1619,7 +1694,9 @@ walkdir = "2.4"
 ```
 
 ### Frontend Dependencies
+
 All already in package.json:
+
 - `@sveltejs/kit`
 - `svelte` (v5)
 - `typescript`
@@ -1634,6 +1711,7 @@ All already in package.json:
 ## Appendix B: Useful Resources
 
 **Documentation:**
+
 - [Tauri v2 Docs](https://v2.tauri.app/)
 - [SvelteKit Docs](https://kit.svelte.dev/)
 - [Svelte 5 Runes](https://svelte.dev/docs/svelte/what-are-runes)
@@ -1641,10 +1719,12 @@ All already in package.json:
 - [shadcn-svelte](https://www.shadcn-svelte.com/)
 
 **Tauri Plugins:**
+
 - [tauri-plugin-dialog](https://github.com/tauri-apps/tauri-plugin-dialog)
 - [tauri-plugin-shell](https://github.com/tauri-apps/tauri-plugin-shell)
 
 **Tools:**
+
 - [Rust Playground](https://play.rust-lang.org/)
 - [Svelte REPL](https://svelte.dev/repl)
 - [Tailwind Play](https://play.tailwindcss.com/)

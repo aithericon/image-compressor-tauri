@@ -6,13 +6,16 @@
 @custom-variant dark (&:is(.dark *));
 @source '../node_modules/layerchart/dist';
 @keyframes slow-blink {
-	0%, 49% { opacity: 1; }
-	50%, 100% { opacity: 0; }
+	0%,
+	49% {
+		opacity: 1;
+	}
+	50%,
+	100% {
+		opacity: 0;
+	}
 }
 
-
-
-  
 :root {
 	--font-sans: 'Space Mono', monospace, system-ui;
 
@@ -152,15 +155,11 @@
 	--color-info: var(--info);
 	--color-info-foreground: var(--info-foreground);
 
-
-
-
 	--color-primary: var(--primary);
 	--color-surface-100: var(--background);
 	--color-surface-200: var(--muted);
 	--color-surface-300: var(--muted);
 	--color-surface-content: var(--card-foreground);
-
 }
 
 @layer base {
