@@ -37,6 +37,9 @@ pub async fn analyze_images(
         return Err("No paths provided for analysis".to_string());
     }
 
+    // Clone app handle for use in closure
+    let app_handle = app.clone();
+
     // Run analysis in a blocking task with progress reporting
     let result = tokio::task::spawn_blocking(move || {
         analyze_images_internal(&paths, quality, size_ratio, generate_thumbnails, |current, total| {
@@ -48,7 +51,7 @@ pub async fn analyze_images(
                     total,
                     percent,
                 };
-                let _ = app.emit("analysis:progress", &progress);
+                let _ = app_handle.emit("analysis:progress", &progress);
             }
         })
     })

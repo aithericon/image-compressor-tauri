@@ -182,10 +182,10 @@ pub fn analyze_images<F>(
     quality: f32,
     size_ratio: f32,
     generate_thumbnails: bool,
-    mut progress_callback: F
+    progress_callback: F
 ) -> Vec<ImageInfo>
 where
-    F: FnMut(usize, usize) + Send + Sync,
+    F: Fn(usize, usize) + Send + Sync,
 {
     // First, collect all image paths to process
     let mut image_paths = Vec::new();
