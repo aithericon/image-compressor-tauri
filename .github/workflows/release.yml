@@ -97,3 +97,8 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+      - name: Remove quarantine from macOS DMG
+        if: matrix.platform == 'macos-latest'
+        run: |
+          find src-tauri/target/release/bundle/dmg -name "*.dmg" -exec xattr -d com.apple.quarantine {} \; || true
