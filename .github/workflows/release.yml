@@ -56,6 +56,9 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Generate Paraglide i18n files
+        run: npm run prepare
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
