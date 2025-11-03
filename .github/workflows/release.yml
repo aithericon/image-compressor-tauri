@@ -57,7 +57,7 @@ jobs:
         run: npm ci
 
       - name: Generate Paraglide i18n files
-        run: npm run prepare
+        run: npm run paraglide:compile
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
