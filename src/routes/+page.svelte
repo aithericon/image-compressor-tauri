@@ -14,7 +14,7 @@
 	import * as m from '$lib/paraglide/messages';
 	import { setLocale, getLocale } from '$lib/paraglide/runtime';
 	import { Button } from '$lib/components/ui/button';
-	import { Languages, Globe, Mail } from 'lucide-svelte';
+	import { Languages, Globe, Mail, Github } from 'lucide-svelte';
 
 	// Event listeners setup
 	let unlistenProgress: (() => void) | null = null;
@@ -114,6 +114,7 @@
 			<div class="flex items-center gap-4">
 				<span>{m.footer_copyright()}</span>
 				<span class="text-muted-foreground/60">•</span>
+				<!-- svelte-ignore a11y-missing-attribute -->
 				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 				<a
 					href="/license"
@@ -130,6 +131,15 @@
 				>
 					<Globe class="h-3 w-3" />
 					<span>{m.footer_website()}</span>
+				</a>
+				<a
+					href="https://github.com/aithericon/image-compressor-tauri"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="hover:text-foreground flex items-center gap-1 transition-colors"
+				>
+					<Github class="h-3 w-3" />
+					<span>GitHub</span>
 				</a>
 				<a
 					href="mailto:support@aithericon.eu"
