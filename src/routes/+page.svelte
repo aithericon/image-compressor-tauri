@@ -114,8 +114,6 @@
 			<div class="flex items-center gap-4">
 				<span>{m.footer_copyright()}</span>
 				<span class="text-muted-foreground/60">•</span>
-				<!-- svelte-ignore a11y-missing-attribute -->
-				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 				<a
 					href="/license"
 					data-sveltekit-preload-data="hover"
