@@ -15,7 +15,7 @@ use super::types::{ImageInfo, PathValidation};
 const SUPPORTED_EXTENSIONS: &[&str] = &["jpg", "jpeg", "png", "bmp", "gif", "webp", "tiff", "tif", "ico"];
 
 /// Default thumbnail size in pixels
-const THUMBNAIL_SIZE: u32 = 64;
+const THUMBNAIL_SIZE: u32 = 200;
 
 /// Generate a thumbnail from an image and return it as a base64-encoded data URI
 fn generate_thumbnail(img: &DynamicImage) -> Result<String, String> {

@@ -4,17 +4,26 @@
 	import TreeViewFile from '$lib/components/ui/tree-view/tree-view-file.svelte';
 	import type { IFileExplorerRepository } from '$lib/repositories/fileExplorerRepository';
 	import type { FileEntry } from '$lib/types/fileExplorer';
+	import type { ImageInfo } from '$lib/types/compression';
+	import { Check } from 'lucide-svelte';
+
+	// Supported image extensions
+	const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.tiff', '.tif'];
 
 	// Props
 	let {
 		repository,
 		rootPath = $bindable(),
 		selectedFile = $bindable(),
+		selectedImages = [],
+		onFileClick,
 		class: className
 	}: {
 		repository: IFileExplorerRepository;
 		rootPath?: string;
 		selectedFile?: FileEntry;
+		selectedImages?: ImageInfo[];
+		onFileClick?: (file: FileEntry) => void;
 		class?: string;
 	} = $props();
 
@@ -70,7 +79,8 @@
 		try {
 			isLoadingRoot = true;
 			error = null;
-			rootEntries = await repository.listDirectory(rootPath);
+			const entries = await repository.listDirectory(rootPath);
+			rootEntries = filterImageEntries(entries);
 			loadedDirectories[rootPath] = true;
 			// Initialize folder states for root entries
 			rootEntries.forEach((entry) => {
@@ -109,56 +119,96 @@
 		}
 	}
 
+	// Check if a file is a supported image
+	function isImageFile(filename: string): boolean {
+		const ext = filename.toLowerCase().slice(filename.lastIndexOf('.'));
+		return IMAGE_EXTENSIONS.includes(ext);
+	}
+
+	// Check if an image is already selected
+	function isImageSelected(path: string): boolean {
+		return selectedImages.some((img) => img.path === path);
+	}
+
+	// Filter entries to only show images and directories that contain images
+	function filterImageEntries(entries: FileEntry[]): FileEntry[] {
+		return entries.filter((entry) => {
+			if (entry.isDirectory) {
+				// Show directories (we'll check if they're empty when loading)
+				return true;
+			}
+			// Only show image files
+			return isImageFile(entry.name);
+		});
+	}
+
+	// Get filtered children for a directory
 	function getChildren(path: string): FileEntry[] {
-		return directoryContents[path] || [];
+		const children = directoryContents[path] || [];
+		return filterImageEntries(children);
 	}
 
 	function handleFileClick(entry: FileEntry) {
 		selectedFile = entry;
+		// Call the callback if provided
+		if (onFileClick) {
+			onFileClick(entry);
+		}
 	}
 </script>
 
 <!-- Recursive snippet for rendering tree nodes -->
 {#snippet fileTreeNode(entry: FileEntry)}
 	{#if entry.isDirectory}
-		{@const isSelected = selectedFile?.path === entry.path}
-		<TreeViewFolder
-			name={entry.name}
-			bind:open={folderStates[entry.path]}
-			class="{isSelected
-				? 'rounded-sm bg-accent/50 px-1'
-				: 'hover:bg-accent/20 rounded-sm px-1'} cursor-pointer transition-colors"
-			onclick={(e) => {
-				// Only select if clicking the folder name, not expanding
-				const target = e.target as HTMLElement;
-				if (target.closest('button[type="button"]')) {
-					e.stopPropagation();
-					handleFileClick(entry);
-				}
-			}}
-		>
-			{#if loadingDirectories[entry.path]}
-				<div class="p-2 text-xs text-muted-foreground">Loading...</div>
-			{:else if loadedDirectories[entry.path]}
-				{@const children = getChildren(entry.path)}
-				{#if children.length === 0}
-					<div class="p-2 text-xs text-muted-foreground italic">Empty directory</div>
-				{:else}
+		{@const isLoaded = loadedDirectories[entry.path]}
+		{@const children = isLoaded ? getChildren(entry.path) : null}
+		{@const isEmpty = isLoaded && children !== null && children.length === 0}
+
+		{#if !isEmpty}
+			{@const isSelected = selectedFile?.path === entry.path}
+			<TreeViewFolder
+				name={entry.name}
+				bind:open={folderStates[entry.path]}
+				class={isSelected
+					? 'rounded-sm bg-accent/50 px-1 cursor-pointer transition-colors'
+					: 'hover:bg-accent/20 rounded-sm px-1 cursor-pointer transition-colors'}
+				onclick={(e) => {
+					// Only select if clicking the folder name, not expanding
+					const target = e.target as HTMLElement;
+					if (target.closest('button[type="button"]')) {
+						e.stopPropagation();
+						handleFileClick(entry);
+					}
+				}}
+			>
+				{#if loadingDirectories[entry.path]}
+					<div class="p-2 text-xs text-muted-foreground">Loading...</div>
+				{:else if isLoaded && children && children.length > 0}
 					{#each children as child (child.path)}
 						{@render fileTreeNode(child)}
 					{/each}
 				{/if}
-			{/if}
-		</TreeViewFolder>
+			</TreeViewFolder>
+		{/if}
 	{:else}
-		<TreeViewFile
-			name={entry.name}
-			onclick={(e) => {
-				e.stopPropagation();
-				handleFileClick(entry);
-			}}
-			class={selectedFile?.path === entry.path ? 'bg-accent text-accent-foreground' : ''}
-		/>
+		{@const isAlreadySelected = isImageSelected(entry.path)}
+		<div class="relative">
+			<TreeViewFile
+				name={entry.name}
+				onclick={(e) => {
+					e.stopPropagation();
+					handleFileClick(entry);
+				}}
+				class={isAlreadySelected
+					? 'bg-primary/20 text-primary font-medium'
+					: selectedFile?.path === entry.path
+						? 'bg-accent text-accent-foreground'
+						: ''}
+			/>
+			{#if isAlreadySelected}
+				<Check class="absolute right-1 top-1/2 -translate-y-1/2 h-3 w-3 text-primary" />
+			{/if}
+		</div>
 	{/if}
 {/snippet}
 
