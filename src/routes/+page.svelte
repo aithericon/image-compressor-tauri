@@ -116,6 +116,13 @@
 					{m.footer_license()}
 				</a>
 				<a
+					href="/file-explorer"
+					data-sveltekit-preload-data="hover"
+					class="hover:text-foreground transition-colors"
+				>
+					File Explorer Demo
+				</a>
+				<a
 					href="https://aithericon.eu"
 					target="_blank"
 					rel="noopener noreferrer"

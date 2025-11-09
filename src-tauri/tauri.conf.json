@@ -5,7 +5,7 @@
 	"identifier": "eu.aithericon.imagecompressor",
 	"build": {
 		"frontendDist": "../build",
-		"devUrl": "http://localhost:5173",
+		"devUrl": "http://localhost:5176",
 		"beforeDevCommand": "npm run dev",
 		"beforeBuildCommand": "npm run build"
 	},
