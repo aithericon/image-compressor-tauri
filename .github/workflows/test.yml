@@ -51,8 +51,12 @@ jobs:
         if: matrix.platform == 'windows-latest'
         shell: bash
         run: |
+          # Match the release workflow: static .lib + dynamic CRT for a
+          # self-contained .exe. Setting both env vars so vcpkg-rs and
+          # vcpkg's CLI agree on the triplet to look in.
           vcpkg install libheif:x64-windows-static-md
-          echo "VCPKGRS_DYNAMIC=1" >> $GITHUB_ENV
+          echo "VCPKGRS_TRIPLET=x64-windows-static-md" >> $GITHUB_ENV
+          echo "VCPKG_DEFAULT_TRIPLET=x64-windows-static-md" >> $GITHUB_ENV
           echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
 
       - name: Install frontend dependencies
