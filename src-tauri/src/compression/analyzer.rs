@@ -9,29 +9,49 @@ use walkdir::WalkDir;
 use base64::{Engine as _, engine::general_purpose};
 use rayon::prelude::*;
 
+use super::heic::{decode_heic, is_heic_path};
 use super::types::{ImageInfo, PathValidation};
 
 /// Supported image extensions
-const SUPPORTED_EXTENSIONS: &[&str] = &["jpg", "jpeg", "png", "bmp", "gif", "webp", "tiff", "tif", "ico"];
+const SUPPORTED_EXTENSIONS: &[&str] = &[
+    "jpg", "jpeg", "png", "bmp", "gif", "webp", "tiff", "tif", "ico", "heic", "heif",
+];
+
+/// Open an image file, transparently routing HEIC/HEIF through libheif.
+fn open_image(path: &Path) -> Result<DynamicImage, String> {
+    if is_heic_path(path) {
+        decode_heic(path)
+    } else {
+        image::open(path).map_err(|e| format!("Invalid or corrupted image file: {}", e))
+    }
+}
 
 /// Default thumbnail size in pixels
-const THUMBNAIL_SIZE: u32 = 64;
+const THUMBNAIL_SIZE: u32 = 200;
 
 /// Generate a thumbnail from an image and return it as a base64-encoded data URI
 fn generate_thumbnail(img: &DynamicImage) -> Result<String, String> {
     // Resize to thumbnail size (maintaining aspect ratio)
-    // Using Triangle filter for better performance while maintaining decent quality
-    let thumbnail = img.resize(THUMBNAIL_SIZE, THUMBNAIL_SIZE, FilterType::Triangle);
+    // Using Lanczos3 filter for highest quality
+    let thumbnail = img.resize(THUMBNAIL_SIZE, THUMBNAIL_SIZE, FilterType::Lanczos3);
 
-    // Convert to PNG bytes
-    let mut png_bytes = Vec::new();
-    thumbnail.write_to(&mut io::Cursor::new(&mut png_bytes), ImageFormat::Png)
-        .map_err(|e| format!("Failed to encode thumbnail: {}", e))?;
+    // Convert to JPEG with high quality (better for photos, smaller than PNG)
+    let mut jpeg_bytes = Vec::new();
+    let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(
+        &mut jpeg_bytes,
+        90  // High quality (0-100)
+    );
+    encoder.encode(
+        thumbnail.as_bytes(),
+        thumbnail.width(),
+        thumbnail.height(),
+        thumbnail.color().into()
+    ).map_err(|e| format!("Failed to encode thumbnail: {}", e))?;
 
     // Encode as base64
-    let base64_string = general_purpose::STANDARD.encode(&png_bytes);
+    let base64_string = general_purpose::STANDARD.encode(&jpeg_bytes);
 
-    Ok(format!("data:image/png;base64,{}", base64_string))
+    Ok(format!("data:image/jpeg;base64,{}", base64_string))
 }
 
 /// Check if a file has a valid image extension
@@ -63,10 +83,7 @@ pub fn is_valid_image(path: &Path) -> Result<(), String> {
     }
 
     // Try to open as image to verify it's actually valid
-    match image::open(path) {
-        Ok(_) => Ok(()),
-        Err(e) => Err(format!("Invalid or corrupted image file: {}", e)),
-    }
+    open_image(path).map(|_| ())
 }
 
 /// Analyze a single image file and extract metadata (optimized - opens image only once)
@@ -94,9 +111,9 @@ pub fn analyze_image(path: &Path, quality: f32, size_ratio: f32, generate_thumbn
 
     let original_size = metadata.len();
 
-    // Open the image ONCE - use for validation, dimensions, and thumbnail
-    let img = image::open(path)
-        .map_err(|e| format!("Invalid or corrupted image file: {}", e))?;
+    // Open the image ONCE - use for validation, dimensions, and thumbnail.
+    // HEIC/HEIF goes through libheif; everything else through the `image` crate.
+    let img = open_image(path)?;
 
     let (width, height) = (img.width(), img.height());
 
@@ -144,6 +161,7 @@ fn detect_format(path: &Path, _img: &DynamicImage) -> String {
             "webp" => Some("WEBP"),
             "tiff" | "tif" => Some("TIFF"),
             "ico" => Some("ICO"),
+            "heic" | "heif" => Some("HEIC"),
             _ => None,
         }) {
         return format.to_string();
@@ -163,6 +181,7 @@ pub fn estimate_compressed_size(original_size: u64, format: &str, quality: f32, 
         "GIF" => 0.5,             // Already compressed but inefficient
         "JPEG" => 0.8,            // Already compressed, less savings
         "WEBP" => 0.85,           // Already well compressed
+        "HEIC" => 1.1,            // HEIC is more efficient than JPEG; output is often larger
         _ => 0.5,                 // Default estimate
     };
 
@@ -172,8 +191,15 @@ pub fn estimate_compressed_size(original_size: u64, format: &str, quality: f32, 
     // Apply both factors and size ratio
     let estimated = (original_size as f64 * base_factor * quality_factor * size_ratio as f64) as u64;
 
-    // Ensure we don't estimate 0 bytes or more than original
-    estimated.max(1024).min(original_size)
+    // Ensure we don't estimate below a sane floor.
+    // HEIC is more efficient than JPEG, so the JPG output may legitimately exceed the original;
+    // for all other formats we clamp at original_size to avoid implausible estimates.
+    let floor = estimated.max(1024);
+    if format == "HEIC" {
+        floor
+    } else {
+        floor.min(original_size)
+    }
 }
 
 /// Analyze multiple image paths with parallel processing and progress reporting

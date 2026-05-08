@@ -5,12 +5,12 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-lightgrey)
 
-A minimal, user-friendly desktop application built by [Aithericon GmbH](https://aithericon.eu) for efficiently compressing images in bulk. Convert images from various formats (PNG, BMP, GIF, WebP, etc.) to optimized JPG files with configurable quality and size settings.
+A minimal, user-friendly desktop application built by [Aithericon GmbH](https://aithericon.eu) for efficiently compressing images in bulk. Convert images from various formats (PNG, BMP, GIF, WebP, HEIC, etc.) to optimized JPG files with configurable quality and size settings.
 
 ## Features
 
 - ✅ **Bulk Compression** - Process multiple images simultaneously with parallel processing
-- ✅ **Multiple Format Support** - Input: PNG, BMP, GIF, WebP, TIFF | Output: Optimized JPG
+- ✅ **Multiple Format Support** - Input: PNG, BMP, GIF, WebP, TIFF, HEIC/HEIF (iPhone) | Output: Optimized JPG
 - ✅ **Configurable Quality** - Adjust quality (0-100%) and size ratio (10-100%)
 - ✅ **Image Previews** - View 64x64px thumbnails of your images before compression
 - ✅ **Real-time Progress** - Track compression progress with detailed status updates
@@ -49,6 +49,10 @@ Before running the application, ensure you have:
 - **Node.js 18+** and npm
 - **Rust** (latest stable) - [Install Rust](https://rustup.rs/)
 - **Platform-specific dependencies** - [See Tauri prerequisites](https://v2.tauri.app/start/prerequisites/)
+- **libheif** (required for HEIC/HEIF decoding):
+  - macOS: `brew install libheif pkg-config`
+  - Windows: `vcpkg install libheif:x64-windows-static-md`
+  - Linux: `sudo apt-get install libheif-dev`
 
 ### Installation
 

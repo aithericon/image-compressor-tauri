@@ -1,11 +1,11 @@
 {
 	"$schema": "../../node_modules/@tauri-apps/cli/config.schema.json",
 	"productName": "Image Compressor - Aithericon",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"identifier": "eu.aithericon.imagecompressor",
 	"build": {
 		"frontendDist": "../build",
-		"devUrl": "http://localhost:5173",
+		"devUrl": "http://localhost:5176",
 		"beforeDevCommand": "npm run dev",
 		"beforeBuildCommand": "npm run build"
 	},

@@ -15,6 +15,10 @@ export default defineConfig({
 			strategy: ['localStorage', 'globalVariable', 'baseLocale']
 		})
 	],
+	server: {
+		port: 5176,
+		strictPort: true
+	},
 	test: {
 		expect: { requireAssertions: true },
 		projects: [

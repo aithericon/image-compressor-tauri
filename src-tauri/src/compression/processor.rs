@@ -3,10 +3,12 @@ use std::fs;
 use std::time::Instant;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicUsize, Ordering};
+use image::imageops::FilterType;
 use image_compressor::{Factor, FolderCompressor, compressor::Compressor};
 use walkdir::WalkDir;
 use rayon::prelude::*;
 
+use super::heic::{decode_heic, is_heic_path};
 use super::types::{CompressionConfig, CompressResult, ImageError, ProgressUpdate};
 use super::analyzer::{has_valid_extension, is_valid_image};
 
@@ -94,7 +96,13 @@ where
                 }
 
                 // Compress the image
-                match compress_single_image(file_path, &output_file_path, factor) {
+                match compress_single_image(
+                    file_path,
+                    &output_file_path,
+                    factor,
+                    config.quality,
+                    config.size_ratio,
+                ) {
                     Ok(compressed_size) => {
                         let saved = original_size.saturating_sub(compressed_size);
 
@@ -165,6 +173,8 @@ fn compress_single_image(
     input_path: &Path,
     output_path: &Path,
     factor: Factor,
+    quality: f32,
+    size_ratio: f32,
 ) -> Result<u64, String> {
     // Validate input
     is_valid_image(input_path)?;
@@ -173,6 +183,12 @@ fn compress_single_image(
     if let Some(parent) = output_path.parent() {
         fs::create_dir_all(parent)
             .map_err(|e| format!("Failed to create output directory: {}", e))?;
+    }
+
+    // HEIC/HEIF can't be opened by image_compressor (which uses the `image` crate).
+    // Decode through libheif and encode via the `image` crate's JPEG encoder.
+    if is_heic_path(input_path) {
+        return compress_heic_to_jpg(input_path, output_path, quality, size_ratio);
     }
 
     // Create compressor - note the API requires the destination to be a directory
@@ -200,6 +216,45 @@ fn compress_single_image(
     }
 
     // Get compressed file size
+    fs::metadata(output_path)
+        .map(|m| m.len())
+        .map_err(|e| format!("Failed to read compressed file size: {}", e))
+}
+
+/// Compress an HEIC/HEIF file to JPEG using libheif + the `image` crate.
+///
+/// Mirrors the behaviour of `image_compressor::Compressor::compress_to_jpg` for the
+/// quality / size_ratio knobs: size_ratio is applied as a linear scale on width and height,
+/// quality is the JPEG encoder quality (0-100).
+fn compress_heic_to_jpg(
+    input_path: &Path,
+    output_path: &Path,
+    quality: f32,
+    size_ratio: f32,
+) -> Result<u64, String> {
+    let img = decode_heic(input_path)?;
+
+    let quality = quality.round().clamp(1.0, 100.0) as u8;
+
+    let resized = if (size_ratio - 1.0).abs() > f32::EPSILON {
+        let new_w = ((img.width() as f32) * size_ratio).round().max(1.0) as u32;
+        let new_h = ((img.height() as f32) * size_ratio).round().max(1.0) as u32;
+        img.resize(new_w, new_h, FilterType::Lanczos3)
+    } else {
+        img
+    };
+
+    // JPEG has no alpha; flatten any RGBA source to RGB before encoding.
+    let rgb = resized.to_rgb8();
+
+    let file = fs::File::create(output_path)
+        .map_err(|e| format!("Failed to create output JPEG: {}", e))?;
+    let mut writer = std::io::BufWriter::new(file);
+    let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut writer, quality);
+    encoder
+        .encode(rgb.as_raw(), rgb.width(), rgb.height(), image::ColorType::Rgb8)
+        .map_err(|e| format!("Failed to encode HEIC->JPEG: {}", e))?;
+
     fs::metadata(output_path)
         .map(|m| m.len())
         .map_err(|e| format!("Failed to read compressed file size: {}", e))
@@ -381,6 +436,60 @@ fn find_common_parent(file_path: &Path, source_paths: &[String]) -> Option<PathB
         }
     }
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn fixture(name: &str) -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests")
+            .join("fixtures")
+            .join(name)
+    }
+
+    #[test]
+    fn compress_heic_to_jpg_produces_valid_jpeg() {
+        let input = fixture("sample.heic");
+        assert!(input.exists(), "missing fixture at {}", input.display());
+
+        let tmp_dir = std::env::temp_dir().join("img-compress-heic-test");
+        fs::create_dir_all(&tmp_dir).unwrap();
+        let output = tmp_dir.join("sample.jpg");
+        // Clean any leftover from a prior run so size assertions are unambiguous.
+        let _ = fs::remove_file(&output);
+
+        let bytes = compress_heic_to_jpg(&input, &output, 85.0, 1.0)
+            .expect("HEIC->JPG compression should succeed");
+
+        assert!(bytes > 0, "compressed output must have non-zero size");
+        assert!(output.exists());
+
+        // Re-decode the JPEG via the `image` crate to confirm it's a valid JPEG file.
+        let decoded = image::open(&output).expect("output should be a valid JPEG");
+        assert!(decoded.width() > 0 && decoded.height() > 0);
+    }
+
+    #[test]
+    fn compress_heic_respects_size_ratio() {
+        let input = fixture("sample.heic");
+        let tmp_dir = std::env::temp_dir().join("img-compress-heic-test");
+        fs::create_dir_all(&tmp_dir).unwrap();
+        let output = tmp_dir.join("sample-half.jpg");
+        let _ = fs::remove_file(&output);
+
+        // Decode source to know expected dimensions at 0.5 scale.
+        let src = crate::compression::heic::decode_heic(&input).unwrap();
+        let expected_w = ((src.width() as f32) * 0.5).round() as u32;
+        let expected_h = ((src.height() as f32) * 0.5).round() as u32;
+
+        compress_heic_to_jpg(&input, &output, 80.0, 0.5).unwrap();
+
+        let decoded = image::open(&output).unwrap();
+        assert_eq!(decoded.width(), expected_w);
+        assert_eq!(decoded.height(), expected_h);
+    }
 }
 
 /// Get a unique filename by appending numbers if necessary

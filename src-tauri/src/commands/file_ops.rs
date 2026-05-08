@@ -31,12 +31,16 @@ pub async fn select_files(app: tauri::AppHandle) -> Result<Vec<String>, String> 
 
     app.dialog()
         .file()
-        .add_filter("Image Files", &["jpg", "jpeg", "png", "bmp", "gif", "webp", "tiff", "tif", "ico"])
+        .add_filter(
+            "Image Files",
+            &["jpg", "jpeg", "png", "bmp", "gif", "webp", "tiff", "tif", "ico", "heic", "heif"],
+        )
         .add_filter("JPEG Images", &["jpg", "jpeg"])
         .add_filter("PNG Images", &["png"])
         .add_filter("BMP Images", &["bmp"])
         .add_filter("GIF Images", &["gif"])
         .add_filter("WebP Images", &["webp"])
+        .add_filter("HEIC / HEIF Images", &["heic", "heif"])
         .add_filter("All Files", &["*"])
         .pick_files(move |file_paths| {
             let _ = tx.send(file_paths);
