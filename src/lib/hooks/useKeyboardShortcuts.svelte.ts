@@ -36,21 +36,25 @@ export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[]) {
 			for (const shortcut of shortcuts) {
 				const modifiers = shortcut.modifiers || {};
 
-				// On Mac, use Command (meta) instead of Ctrl for most shortcuts
-				const cmdOrCtrl = isMac ? modifiers.meta : modifiers.ctrl;
-
 				// Check if the key matches
 				const keyMatches = event.key.toLowerCase() === shortcut.key.toLowerCase();
 
-				// Check if modifiers match
-				const ctrlMatches = cmdOrCtrl === undefined || event.ctrlKey === !!modifiers.ctrl;
-				const shiftMatches = modifiers.shift === undefined || event.shiftKey === !!modifiers.shift;
-				const altMatches = modifiers.alt === undefined || event.altKey === !!modifiers.alt;
-				const metaMatches = isMac
-					? (cmdOrCtrl === undefined || event.metaKey === !!cmdOrCtrl)
-					: (modifiers.meta === undefined || event.metaKey === !!modifiers.meta);
+				// Platform-aware modifier matching
+				// If both meta and ctrl are specified, it means "use the platform-appropriate one"
+				const wantsCmdCtrl = modifiers.meta && modifiers.ctrl;
+				const hasCmdCtrl = isMac ? event.metaKey : event.ctrlKey;
 
-				if (keyMatches && ctrlMatches && shiftMatches && altMatches && metaMatches) {
+				// Check if modifiers match
+				const ctrlMatches = wantsCmdCtrl
+					? hasCmdCtrl  // Platform-appropriate key
+					: (modifiers.ctrl === undefined || event.ctrlKey === modifiers.ctrl);
+				const metaMatches = wantsCmdCtrl
+					? hasCmdCtrl  // Platform-appropriate key
+					: (modifiers.meta === undefined || event.metaKey === modifiers.meta);
+				const shiftMatches = modifiers.shift === undefined || event.shiftKey === modifiers.shift;
+				const altMatches = modifiers.alt === undefined || event.altKey === modifiers.alt;
+
+				if (keyMatches && ctrlMatches && metaMatches && shiftMatches && altMatches) {
 					event.preventDefault();
 					shortcut.handler(event);
 					break;

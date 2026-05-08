@@ -3,6 +3,7 @@
 	import { convertFileSrc } from '@tauri-apps/api/core';
 	import { Image as ImageIcon, X, CheckCircle2 } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
+	import * as m from '$lib/paraglide/messages';
 
 	// Format file size
 	function formatBytes(bytes: number): string {
@@ -54,9 +55,9 @@
 			<div class="mx-auto rounded-lg bg-muted p-6 w-fit">
 				<ImageIcon class="h-16 w-16 text-muted-foreground" />
 			</div>
-			<h3 class="text-lg font-semibold">No Images Selected</h3>
+			<h3 class="text-lg font-semibold">{m.image_grid_no_images_title()}</h3>
 			<p class="text-sm text-muted-foreground max-w-sm">
-				Select images from the file browser or use the file selector to get started.
+				{m.image_grid_no_images_description()}
 			</p>
 		</div>
 	</div>
@@ -65,12 +66,11 @@
 		<!-- Header -->
 		<div class="border-b p-4 flex items-center justify-between">
 			<div>
-				<h2 class="text-lg font-semibold">Selected Images</h2>
+				<h2 class="text-lg font-semibold">{m.image_grid_selected_title()}</h2>
 				<p class="text-sm text-muted-foreground">
-					{compressionState.selectedImages.length} file{compressionState.selectedImages.length !==
-					1
-						? 's'
-						: ''} selected
+					{compressionState.selectedImages.length}
+					{compressionState.selectedImages.length !== 1 ? m.image_grid_files() : m.image_grid_file()}
+					{m.image_grid_selected()}
 					{#if compressionState.selectedImages.length > 0}
 						({formatBytes(
 							compressionState.selectedImages.reduce((sum, img) => sum + img.original_size, 0)
@@ -80,7 +80,7 @@
 			</div>
 			<Button variant="outline" size="sm" onclick={clearAll}>
 				<X class="h-4 w-4 mr-2" />
-				Clear All
+				{m.image_grid_clear_all()}
 			</Button>
 		</div>
 

@@ -5,10 +5,23 @@
 	import type { IFileExplorerRepository } from '$lib/repositories/fileExplorerRepository';
 	import type { FileEntry } from '$lib/types/fileExplorer';
 	import type { ImageInfo } from '$lib/types/compression';
-	import { Check } from 'lucide-svelte';
+	import { Check, ChevronUp, Home, FolderPlus, FolderMinus, Folder, FolderOpen } from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
+	import * as m from '$lib/paraglide/messages';
 
 	// Supported image extensions
-	const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.tiff', '.tif'];
+	const IMAGE_EXTENSIONS = [
+		'.jpg',
+		'.jpeg',
+		'.png',
+		'.gif',
+		'.bmp',
+		'.webp',
+		'.tiff',
+		'.tif',
+		'.heic',
+		'.heif'
+	];
 
 	// Props
 	let {
@@ -133,6 +146,11 @@
 	// Filter entries to only show images and directories that contain images
 	function filterImageEntries(entries: FileEntry[]): FileEntry[] {
 		return entries.filter((entry) => {
+			// Hide hidden files/folders (starting with .)
+			if (entry.name.startsWith('.')) {
+				return false;
+			}
+
 			if (entry.isDirectory) {
 				// Show directories (we'll check if they're empty when loading)
 				return true;
@@ -155,6 +173,119 @@
 			onFileClick(entry);
 		}
 	}
+
+	// Navigate to parent directory
+	async function goUp() {
+		if (!rootPath) return;
+
+		const parentPath = rootPath.split('/').slice(0, -1).join('/') || '/';
+		rootPath = parentPath;
+		// Clear the loaded state to force reload
+		loadedDirectories = {};
+		directoryContents = {};
+		folderStates = {};
+	}
+
+	// Navigate to home directory
+	async function goHome() {
+		try {
+			const home = await repository.getHomeDirectory();
+			rootPath = home;
+			// Clear the loaded state to force reload
+			loadedDirectories = {};
+			directoryContents = {};
+			folderStates = {};
+		} catch (err) {
+			console.error('Failed to navigate to home:', err);
+		}
+	}
+
+	// Check if we can go up (not at root)
+	let canGoUp = $derived(rootPath !== '/' && rootPath !== undefined);
+
+	// Get all image file paths within a directory recursively
+	function getAllImagesInDirectory(path: string, entries: FileEntry[]): string[] {
+		const imagePaths: string[] = [];
+
+		for (const entry of entries) {
+			if (entry.name.startsWith('.')) continue; // Skip hidden
+
+			if (entry.isDirectory) {
+				// Recursively get images from subdirectories if loaded
+				const children = directoryContents[entry.path];
+				if (children) {
+					imagePaths.push(...getAllImagesInDirectory(entry.path, children));
+				}
+			} else if (isImageFile(entry.name)) {
+				imagePaths.push(entry.path);
+			}
+		}
+
+		return imagePaths;
+	}
+
+	// Check if all images in a folder are selected
+	function areAllImagesInFolderSelected(path: string): boolean {
+		const children = directoryContents[path];
+		if (!children) return false;
+
+		const imagePaths = getAllImagesInDirectory(path, children);
+		if (imagePaths.length === 0) return false;
+
+		return imagePaths.every(imgPath => selectedImages.some(img => img.path === imgPath));
+	}
+
+	// Check if any images in a folder are selected
+	function hasAnySelectedImages(path: string): boolean {
+		const children = directoryContents[path];
+		if (!children) return false;
+
+		const imagePaths = getAllImagesInDirectory(path, children);
+		if (imagePaths.length === 0) return false;
+
+		return imagePaths.some(imgPath => selectedImages.some(img => img.path === imgPath));
+	}
+
+	// Toggle all images in a folder
+	async function toggleFolderSelection(path: string, event: MouseEvent) {
+		event.stopPropagation();
+
+		// Load directory if not already loaded
+		if (!loadedDirectories[path]) {
+			await loadDirectory(path);
+		}
+
+		const children = directoryContents[path];
+		if (!children) return;
+
+		const imagePaths = getAllImagesInDirectory(path, children);
+		if (imagePaths.length === 0) return;
+
+		const allSelected = imagePaths.every(imgPath =>
+			selectedImages.some(img => img.path === imgPath)
+		);
+
+		if (allSelected) {
+			// Deselect all - call onFileClick for each selected image
+			imagePaths.forEach(imgPath => {
+				if (onFileClick) {
+					// Extract filename from path
+					const filename = imgPath.split('/').pop() || '';
+					onFileClick({ path: imgPath, name: filename, isDirectory: false });
+				}
+			});
+		} else {
+			// Select all - call onFileClick for each unselected image
+			for (const imgPath of imagePaths) {
+				const alreadySelected = selectedImages.some(img => img.path === imgPath);
+				if (!alreadySelected && onFileClick) {
+					// Extract filename from path
+					const filename = imgPath.split('/').pop() || '';
+					onFileClick({ path: imgPath, name: filename, isDirectory: false });
+				}
+			}
+		}
+	}
 </script>
 
 <!-- Recursive snippet for rendering tree nodes -->
@@ -166,29 +297,51 @@
 
 		{#if !isEmpty}
 			{@const isSelected = selectedFile?.path === entry.path}
-			<TreeViewFolder
-				name={entry.name}
-				bind:open={folderStates[entry.path]}
-				class={isSelected
-					? 'rounded-sm bg-accent/50 px-1 cursor-pointer transition-colors'
-					: 'hover:bg-accent/20 rounded-sm px-1 cursor-pointer transition-colors'}
-				onclick={(e) => {
-					// Only select if clicking the folder name, not expanding
-					const target = e.target as HTMLElement;
-					if (target.closest('button[type="button"]')) {
-						e.stopPropagation();
-						handleFileClick(entry);
-					}
-				}}
-			>
-				{#if loadingDirectories[entry.path]}
-					<div class="p-2 text-xs text-muted-foreground">Loading...</div>
-				{:else if isLoaded && children && children.length > 0}
-					{#each children as child (child.path)}
-						{@render fileTreeNode(child)}
-					{/each}
-				{/if}
-			</TreeViewFolder>
+			{@const hasSelectedImages = loadedDirectories[entry.path] && hasAnySelectedImages(entry.path)}
+			{@const allImagesSelected = loadedDirectories[entry.path] && areAllImagesInFolderSelected(entry.path)}
+			<div class="group flex items-center gap-1">
+				<TreeViewFolder
+					name={entry.name}
+					bind:open={folderStates[entry.path]}
+					class={isSelected
+						? 'rounded-sm bg-accent/50 px-1 cursor-pointer transition-colors flex-1'
+						: 'hover:bg-accent/20 rounded-sm px-1 cursor-pointer transition-colors flex-1'}
+					onclick={(e) => {
+						// Only select if clicking the folder name, not expanding
+						const target = e.target as HTMLElement;
+						if (target.closest('button[type="button"]')) {
+							e.stopPropagation();
+							handleFileClick(entry);
+						}
+					}}
+				>
+					{#snippet icon({ open })}
+						{#if open}
+							<FolderOpen class={hasSelectedImages ? "size-4 flex-shrink-0 text-orange-500" : "size-4 flex-shrink-0"} />
+						{:else}
+							<Folder class={hasSelectedImages ? "size-4 flex-shrink-0 text-orange-500" : "size-4 flex-shrink-0"} />
+						{/if}
+					{/snippet}
+					{#if loadingDirectories[entry.path]}
+						<div class="p-2 text-xs text-muted-foreground">{m.file_explorer_loading()}</div>
+					{:else if isLoaded && children && children.length > 0}
+						{#each children as child (child.path)}
+							{@render fileTreeNode(child)}
+						{/each}
+					{/if}
+				</TreeViewFolder>
+				<button
+					onclick={(e) => toggleFolderSelection(entry.path, e)}
+					class="opacity-0 group-hover:opacity-100 p-1 hover:bg-accent rounded transition-opacity group/btn"
+					title={allImagesSelected ? m.file_explorer_deselect_all_tooltip() : m.file_explorer_select_all_tooltip()}
+				>
+					{#if hasSelectedImages}
+						<FolderMinus class="h-3 w-3 text-primary group-hover/btn:text-foreground transition-colors" />
+					{:else}
+						<FolderPlus class="h-3 w-3 text-muted-foreground group-hover/btn:text-foreground transition-colors" />
+					{/if}
+				</button>
+			</div>
 		{/if}
 	{:else}
 		{@const isAlreadySelected = isImageSelected(entry.path)}
@@ -212,18 +365,47 @@
 	{/if}
 {/snippet}
 
-<TreeView class={className}>
-	{#if error}
-		<div class="text-destructive p-4 text-sm">
-			{error}
+<div class="flex flex-col h-full">
+	<!-- Navigation toolbar -->
+	<div class="flex items-center gap-1 p-2 border-b bg-muted/50">
+		<Button
+			variant="ghost"
+			size="icon"
+			class="h-7 w-7"
+			onclick={goHome}
+			title={m.file_explorer_home_tooltip()}
+		>
+			<Home class="h-4 w-4" />
+		</Button>
+		<Button
+			variant="ghost"
+			size="icon"
+			class="h-7 w-7"
+			onclick={goUp}
+			disabled={!canGoUp}
+			title={m.file_explorer_up_tooltip()}
+		>
+			<ChevronUp class="h-4 w-4" />
+		</Button>
+		<div class="flex-1 text-xs text-muted-foreground truncate px-2" title={rootPath}>
+			{rootPath || '~'}
 		</div>
-	{:else if isLoadingRoot}
-		<div class="p-4 text-sm text-muted-foreground">Loading...</div>
-	{:else if rootEntries.length === 0}
-		<div class="p-4 text-sm text-muted-foreground italic">Empty directory</div>
-	{:else}
-		{#each rootEntries as entry (entry.path)}
-			{@render fileTreeNode(entry)}
-		{/each}
-	{/if}
-</TreeView>
+	</div>
+
+	<!-- Tree view -->
+	<TreeView class={className}>
+		{#if error}
+			<div class="text-destructive p-4 text-sm">
+				{error}
+			</div>
+		{:else if isLoadingRoot}
+			<div class="p-4 text-sm text-muted-foreground">{m.file_explorer_loading()}</div>
+		{:else if rootEntries.length === 0}
+			<div class="p-4 text-sm text-muted-foreground italic">{m.file_explorer_empty()}</div>
+		{:else}
+			{#each rootEntries as entry (entry.path)}
+				{@render fileTreeNode(entry)}
+			{/each}
+		{/if}
+	</TreeView>
+</div>

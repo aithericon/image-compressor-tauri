@@ -10,6 +10,10 @@
 	import { Loader2, Zap } from 'lucide-svelte';
 	import * as m from '$lib/paraglide/messages';
 
+	// Platform detection for keyboard shortcut hint
+	const isMac = typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+	const shortcutHint = isMac ? '⌘↵' : 'Ctrl+↵';
+
 	async function handleCompress() {
 		if (!getCanCompress()) return;
 
@@ -35,14 +39,15 @@
 		size="lg"
 		onclick={handleCompress}
 		disabled={!getCanCompress()}
-		class="w-full"
+		class="w-full flex items-center justify-center gap-2"
 	>
 		{#if compressionState.isCompressing}
-			<Loader2 class="mr-2 h-5 w-5 animate-spin" />
-			{m.compress_button_compressing()}
+			<Loader2 class="h-5 w-5 animate-spin" />
+			<span>{m.compress_button_compressing()}</span>
 		{:else}
-			<Zap class="mr-2 h-5 w-5" />
-			{m.compress_button_compress()}
+			<Zap class="h-5 w-5" />
+			<span>{m.compress_button_compress()}</span>
+			<span class="ml-auto text-xs opacity-60">{shortcutHint}</span>
 		{/if}
 	</Button>
 

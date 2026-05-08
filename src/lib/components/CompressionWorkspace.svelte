@@ -13,6 +13,7 @@
 	import { onMount } from 'svelte';
 	import { DEFAULT_PRESETS, type CompressionPreset } from '$lib/types/presets';
 	import { analyzeImages } from '$lib/utils/tauri-commands';
+	import * as m from '$lib/paraglide/messages';
 
 	// File explorer state
 	let repository = tauriFileExplorerRepository;
@@ -79,7 +80,18 @@
 
 	// Check if a file is an image based on extension
 	function isImageFile(filename: string): boolean {
-		const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.tiff', '.tif'];
+		const imageExtensions = [
+			'.jpg',
+			'.jpeg',
+			'.png',
+			'.gif',
+			'.bmp',
+			'.webp',
+			'.tiff',
+			'.tif',
+			'.heic',
+			'.heif'
+		];
 		const ext = filename.toLowerCase().slice(filename.lastIndexOf('.'));
 		return imageExtensions.includes(ext);
 	}
@@ -136,7 +148,7 @@
 				<div class="border-b p-3 bg-background flex items-center justify-between">
 					<h3 class="text-sm font-semibold flex items-center gap-2">
 						<FolderOpen class="h-4 w-4" />
-						Browse Files
+						{m.file_explorer_browse()}
 					</h3>
 					<Button
 						variant="ghost"
@@ -145,7 +157,7 @@
 						class="h-7 px-2"
 					>
 						<Plus class="h-3 w-3 mr-1" />
-						Add
+						{m.file_explorer_add()}
 					</Button>
 				</div>
 				<div class="flex-1 overflow-auto p-2">
@@ -181,12 +193,12 @@
 			<div class="h-full flex flex-col border-l bg-muted/30">
 				<!-- Settings Header -->
 				<div class="border-b p-3 bg-background">
-					<h3 class="text-sm font-semibold">Compression Settings</h3>
+					<h3 class="text-sm font-semibold">{m.compression_settings_title()}</h3>
 				</div>
 
 				<!-- Preset Selector -->
 				<div class="p-4 border-b space-y-2">
-					<label for="preset-select" class="text-xs font-medium text-muted-foreground">Preset</label>
+					<label for="preset-select" class="text-xs font-medium text-muted-foreground">{m.preset_label()}</label>
 					<select
 						id="preset-select"
 						bind:value={selectedPreset}
@@ -194,10 +206,10 @@
 						class="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
 					>
 						{#each DEFAULT_PRESETS as preset (preset.id)}
-							<option value={preset.id}>{preset.name}</option>
+							<option value={preset.id}>{preset.name()}</option>
 						{/each}
 						{#each customPresets as preset (preset.id)}
-							<option value={preset.id}>{preset.name} (Custom)</option>
+							<option value={preset.id}>{typeof preset.name === 'function' ? preset.name() : preset.name} (Custom)</option>
 						{/each}
 					</select>
 					{#if selectedPreset !== 'custom'}
@@ -205,7 +217,7 @@
 							(p) => p.id === selectedPreset
 						)}
 						{#if preset}
-							<p class="text-xs text-muted-foreground">{preset.description}</p>
+							<p class="text-xs text-muted-foreground">{typeof preset.description === 'function' ? preset.description() : preset.description}</p>
 						{/if}
 					{/if}
 				</div>

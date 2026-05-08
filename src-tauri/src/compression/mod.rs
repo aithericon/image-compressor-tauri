@@ -1,6 +1,7 @@
 pub mod types;
 pub mod analyzer;
 pub mod processor;
+pub mod heic;
 
 // Re-export commonly used types
 pub use types::{

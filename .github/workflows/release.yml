@@ -51,7 +51,26 @@ jobs:
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libheif-dev
+
+      - name: Install libheif (macOS)
+        if: matrix.platform == 'macos-latest'
+        run: |
+          brew install libheif pkg-config
+          # Expose pkg-config path for libheif-rs build script (covers Intel + Apple Silicon brew prefixes)
+          BREW_PREFIX=$(brew --prefix)
+          echo "PKG_CONFIG_PATH=$BREW_PREFIX/lib/pkgconfig:$BREW_PREFIX/opt/libheif/lib/pkgconfig" >> $GITHUB_ENV
+
+      - name: Install libheif (Windows)
+        if: matrix.platform == 'windows-latest'
+        shell: bash
+        run: |
+          # Static-md triplet: static .lib (libheif + transitive deps linked into the .exe),
+          # dynamic CRT (the C runtime is shipped by Windows / VS redistributable).
+          # Result: a self-contained .exe with no libheif.dll to ship.
+          vcpkg install libheif:x64-windows-static-md
+          echo "VCPKGRS_TRIPLET=x64-windows-static-md" >> $GITHUB_ENV
+          echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
 
       - name: Install frontend dependencies
         run: npm ci
@@ -60,6 +79,7 @@ jobs:
         run: npm run paraglide:compile
 
       - name: Build Tauri app
+        id: tauri-build
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -97,3 +117,58 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+      - name: Bundle libheif into .app and re-upload .dmg (macOS)
+        if: matrix.platform == 'macos-latest'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          brew install dylibbundler create-dmg
+
+          # Locate the freshly-built .app and the .dmg tauri-action just uploaded.
+          APP=$(find src-tauri/target -name "*.app" -path "*release*bundle*macos*" -not -path "*citra*" | head -1)
+          DMG=$(find src-tauri/target -name "*.dmg" -path "*release*bundle*dmg*" | head -1)
+          if [ -z "$APP" ] || [ -z "$DMG" ]; then
+            echo "ERROR: could not find .app or .dmg under src-tauri/target/. Layout:"
+            find src-tauri/target -maxdepth 6 -type d | sort
+            exit 1
+          fi
+          echo "App:  $APP"
+          echo "DMG:  $DMG"
+
+          APP_NAME=$(basename "$APP" .app)
+          BIN="$APP/Contents/MacOS/$APP_NAME"
+          FW_DIR="$APP/Contents/Frameworks"
+          mkdir -p "$FW_DIR"
+
+          # Recursively copy libheif + transitive deps into Contents/Frameworks/
+          # and rewrite Mach-O LC_LOAD_DYLIB entries to @executable_path/../Frameworks/.
+          # -od: overwrite existing files, -b: create dest if missing, -of: only fix bundled libs
+          dylibbundler -od -b -of -x "$BIN" -d "$FW_DIR" -p "@executable_path/../Frameworks/"
+
+          # Verify the rewritten binary no longer points at /opt/homebrew.
+          if otool -L "$BIN" | grep -q "/opt/homebrew\|/usr/local/Cellar"; then
+            echo "ERROR: binary still depends on Homebrew paths after dylibbundler:"
+            otool -L "$BIN"
+            exit 1
+          fi
+          ls -la "$FW_DIR"
+
+          # Recreate the .dmg from the patched .app (tauri-action's original is now stale).
+          DMG_DIR=$(dirname "$DMG")
+          DMG_NAME=$(basename "$DMG")
+          rm -f "$DMG"
+          create-dmg \
+            --volname "$APP_NAME" \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --icon "$APP_NAME.app" 175 190 \
+            --hide-extension "$APP_NAME.app" \
+            --app-drop-link 425 190 \
+            --no-internet-enable \
+            "$DMG_DIR/$DMG_NAME" \
+            "$APP" || hdiutil create -volname "$APP_NAME" -srcfolder "$APP" -ov -format UDZO "$DMG_DIR/$DMG_NAME"
+
+          # Re-upload, replacing tauri-action's broken (un-bundled) .dmg in the draft release.
+          gh release upload "${{ github.ref_name }}" "$DMG_DIR/$DMG_NAME" --clobber

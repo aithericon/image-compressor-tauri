@@ -15,6 +15,7 @@
 	import { selectFolder } from '$lib/utils/tauri-commands';
 	import { FolderOpen } from 'lucide-svelte';
 	import * as m from '$lib/paraglide/messages';
+	import { untrack } from 'svelte';
 
 	// Local state for slider values (needed for Slider component)
 	let qualityValue = $state(compressionState.settings.quality);
@@ -26,16 +27,27 @@
 	let estimatedBytesSaved = $derived(getEstimatedBytesSaved());
 	let estimatedSavingsPercent = $derived(getEstimatedSavingsPercent());
 
-	// Update settings when sliders change
+	// Sync local slider state when external compressionState changes (e.g., from preset selection)
 	$effect(() => {
-		compressionState.settings.quality = qualityValue;
-		saveSettings();
+		const quality = compressionState.settings.quality;
+		const sizeRatio = compressionState.settings.size_ratio;
+
+		untrack(() => {
+			qualityValue = quality;
+			sizeRatioValue = sizeRatio * 100;
+		});
 	});
 
-	$effect(() => {
+	// Update compressionState when user moves sliders
+	function handleQualityChange() {
+		compressionState.settings.quality = qualityValue;
+		saveSettings();
+	}
+
+	function handleSizeRatioChange() {
 		compressionState.settings.size_ratio = sizeRatioValue / 100;
 		saveSettings();
-	});
+	}
 
 	async function handleSelectOutputFolder() {
 		try {
@@ -57,7 +69,7 @@
 			<Label for="quality">{m.compression_settings_quality()}</Label>
 			<span class="text-sm font-medium">{qualityValue}%</span>
 		</div>
-		<Slider type="single" min={0} max={100} step={1} bind:value={qualityValue} class="w-full" />
+		<Slider type="single" min={0} max={100} step={1} bind:value={qualityValue} onValueChange={handleQualityChange} class="w-full" />
 	</div>
 
 	<!-- Size Ratio Slider -->
@@ -66,7 +78,7 @@
 			<Label for="sizeRatio">{m.compression_settings_size_ratio()}</Label>
 			<span class="text-sm font-medium">{sizeRatioValue}%</span>
 		</div>
-		<Slider type="single" min={0} max={100} step={1} bind:value={sizeRatioValue} class="w-full" />
+		<Slider type="single" min={0} max={100} step={1} bind:value={sizeRatioValue} onValueChange={handleSizeRatioChange} class="w-full" />
 	</div>
 
 	<!-- Estimated Result -->

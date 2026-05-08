@@ -1,6 +1,6 @@
 [package]
 name = "image-compressor"
-version = "0.1.0"
+version = "0.2.0"
 description = "Professional image compression tool for bulk JPEG conversion"
 authors = ["Aithericon GmbH"]
 license = "MIT"
@@ -37,3 +37,4 @@ num_cpus = "1.16"
 dirs = "5.0"
 uuid = { version = "1.6", features = ["v4"] }
 rayon = "1.10"
+libheif-rs = "1.0"
