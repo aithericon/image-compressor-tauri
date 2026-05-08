@@ -70,6 +70,7 @@ jobs:
           # Result: a self-contained .exe with no libheif.dll to ship.
           vcpkg install libheif:x64-windows-static-md
           echo "VCPKGRS_TRIPLET=x64-windows-static-md" >> $GITHUB_ENV
+          echo "VCPKG_DEFAULT_TRIPLET=x64-windows-static-md" >> $GITHUB_ENV
           echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
 
       - name: Install frontend dependencies

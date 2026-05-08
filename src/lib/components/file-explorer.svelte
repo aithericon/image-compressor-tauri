@@ -306,7 +306,7 @@
 					class={isSelected
 						? 'rounded-sm bg-accent/50 px-1 cursor-pointer transition-colors flex-1'
 						: 'hover:bg-accent/20 rounded-sm px-1 cursor-pointer transition-colors flex-1'}
-					onclick={(e) => {
+					onclick={(e: MouseEvent) => {
 						// Only select if clicking the folder name, not expanding
 						const target = e.target as HTMLElement;
 						if (target.closest('button[type="button"]')) {

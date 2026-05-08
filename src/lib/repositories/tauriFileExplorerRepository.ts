@@ -76,7 +76,7 @@ export const tauriFileExplorerRepository: IFileExplorerRepository = {
 				isDirectory: metadata.isDirectory,
 				isSymlink: metadata.isSymlink,
 				size: Number(metadata.size),
-				createdAt: metadata.ctime ? new Date(metadata.ctime) : undefined,
+				createdAt: metadata.birthtime ? new Date(metadata.birthtime) : undefined,
 				modifiedAt: metadata.mtime ? new Date(metadata.mtime) : undefined,
 				accessedAt: metadata.atime ? new Date(metadata.atime) : undefined
 			};

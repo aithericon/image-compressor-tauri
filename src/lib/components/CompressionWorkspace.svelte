@@ -139,7 +139,7 @@
 <div class="h-full flex flex-col">
 	<PaneGroup
 		direction="horizontal"
-		onLayout={handlePanelResize}
+		onLayoutChange={handlePanelResize}
 		class="flex-1"
 	>
 		<!-- Left Panel: File Explorer -->

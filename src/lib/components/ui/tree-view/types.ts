@@ -13,6 +13,7 @@ export type TreeViewFolderProps = WithChildren<{
 	open?: boolean;
 	class?: string;
 	icon?: Snippet<[{ name: string; open: boolean }]>;
+	onclick?: HTMLButtonAttributes['onclick'];
 }>;
 
 export type TreeViewFilePropsWithoutHTML = WithChildren<{
